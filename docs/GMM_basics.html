@@ -549,7 +549,7 @@ plot(mod1, what = &quot;classification&quot;)</code></pre>
   |=================================================================| 100%</code></pre>
 <pre class="r"><code>plot(BIC)</code></pre>
 <p><img src="GMM_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>BICは小さい方が良いモデルとなる符号の向きにされることが標準的なのですが， このMClustは符号を逆にして，大きい方が良いモデルとなるようにしているようです。 真のモデルと同じ，コンポーネント数が3のときにBICの値が最大になることが確認できます。</p>
+<p>BICは標準的には小さい方が良いモデルとなる指標なのですが， MClustでは符号を逆にして，大きい方が良いモデルとなるようにしているようです。 真のモデルと同じ，コンポーネント数が3のときにBICの値が最大となり，最適なモデルとして選択されます。</p>
 <p>BICで選択されたモデルでモデルフィッティングをするときは以下のようにします。</p>
 <pre class="r"><code>mod2 &lt;- Mclust(df_data, x = BIC)</code></pre>
 </div>
