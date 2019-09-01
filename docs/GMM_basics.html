@@ -337,7 +337,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">因子分析や混合正規分布</a>
+      <a class="navbar-brand" href="index.html"></a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -345,7 +345,7 @@ div.tocify {
   <a href="index.html">ホーム</a>
 </li>
 <li>
-  <a href="GMM_basics.html">混合正規分布の基礎</a>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -461,7 +461,7 @@ plot(df_data$X1, df_data$X2, pch=&quot;.&quot;,cex = 2, xlab=&quot;X1&quot;, yla
 </div>
 </div>
 <div id="mclustgmm" class="section level2">
-<h2>mclustによるGMMのフィッティング</h2>
+<h2>MclustによるGMMのフィッティング</h2>
 <pre class="r"><code>mod1 &lt;- Mclust(df_data, # データ
                G = 3, # コンポーネント数
                modelNames = &quot;VVI&quot; # モデルの分散・共分散行列の構造
@@ -549,9 +549,9 @@ plot(mod1, what = &quot;classification&quot;)</code></pre>
   |=================================================================| 100%</code></pre>
 <pre class="r"><code>plot(BIC)</code></pre>
 <p><img src="GMM_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>コンポーネント数が3のときにBICの値が小さくなることが確認できます。</p>
+<p>BICは小さい方が良いモデルとなる符号の向きにされることが標準的なのですが， このMClustは符号を逆にして，大きい方が良いモデルとなるようにしているようです。 真のモデルと同じ，コンポーネント数が3のときにBICの値が最大になることが確認できます。</p>
 <p>BICで選択されたモデルでモデルフィッティングをするときは以下のようにします。</p>
-<pre class="r"><code>mod1 &lt;- Mclust(df_data, x = BIC)</code></pre>
+<pre class="r"><code>mod2 &lt;- Mclust(df_data, x = BIC)</code></pre>
 </div>
 </div>
 
