@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>因子分析の基本</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">因子分析の基本</h1>
+
+</div>
+
+
+<p>ここでは，Rのpsychパッケージのfa関数を使った 探索的因子分析の方法を確認します。 同様の方法は多くの心理統計の実践法の書籍に掲載されています。</p>
+<p>ここでの特色は，因子分析を真のモデルからデータを生成し，それに対し因子分析を実行してパラメータや変数の推定することです。</p>
+<div class="section level2">
+<h2>準備</h2>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
+<pre class="r"><code>install.packages(&quot;psych&quot;)
+install.packages(&quot;GPArotation&quot;)</code></pre>
+</div>
+<div class="section level2">
+<h2>ライブラリ読み込み</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(psych)
+library(GPArotation)</code></pre>
+</div>
+<div class="section level2">
+<h2>データの生成</h2>
+<p>ここでは 回答者<span class="math inline">\(i\)</span>の項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{ij} = a_{j1} f_{i1} + a_{j2} f_{i2} + d_j u_{ij}\)</span>で与えらえる，というモデルを考えます。</p>
+<p>共通因子は<span class="math inline">\(f_{1}\)</span>と<span class="math inline">\(f_{2}\)</span>の2つで，それぞれの項目<span class="math inline">\(j\)</span>に対する 因子負荷量は<span class="math inline">\(a_{j1}\)</span>, <span class="math inline">\(a_{j2}\)</span>の２つという単純な構造のモデルです。</p>
+<p>以下，仮想的な回答者ごとにループを回して回答データを生成します。 生成プロセスが把握しやすいよう，行列は使いません。</p>
+<pre class="r"><code># 乱数のシードを設定
+set.seed(1)
+
+n &lt;- 100 # 回答者数
+m &lt;- 10  # 項目数
+
+# 因子負荷
+a1 &lt;- c(2,2,2,2,2,0,0,0,0,0) # factor 1 項目1-5だけに値を持つ
+a2 &lt;- c(0,0,0,0,0,1,1,1,1,1) # factor 2 項目6-10だけに値を持つ
+
+# 仮想回答データを入れる変数のメモリを確保
+y &lt;- matrix(nrow = n, ncol = m)
+
+# 真の因子の値を入れるデータフレーム
+df_fs &lt;- data.frame(matrix(nrow = n, ncol = 2))
+
+for (idx in 1:n){
+  # 回答者idxの (真の) 因子スコアは標準正規分布から生成する
+  f1 &lt;- rnorm(n = 1, mean = 0, sd = 1) # factor 1
+  f2 &lt;- rnorm(n = 1, mean = 0, sd = 1) # factor 2
+
+  # 回答者idxの仮想回答データ
+  y[idx,] &lt;- a1 * f1 + a2 * f2 + 
+    rnorm(m, mean = 0, sd = 1) # 独自因子
+  
+  colnames(df_fs) &lt;- c(&quot;f1&quot;, &quot;f2&quot;)
+  df_fs[idx,&quot;f1&quot;] &lt;- f1
+  df_fs[idx,&quot;f2&quot;] &lt;- f2
+}
+
+# 観測される仮想回答データをデータフレームに格納
+df_data &lt;- data.frame(y)</code></pre>
+<div class="section level3">
+<h3>生成データの確認</h3>
+<p>データが正しくデータフレームに格納されているか，以下で確認します。</p>
+<pre class="r"><code>dim(df_data)</code></pre>
+<pre><code>## [1] 100  10</code></pre>
+<pre class="r"><code>head(df_data,5)</code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th align="right">X1</th>
+<th align="right">X2</th>
+<th align="right">X3</th>
+<th align="right">X4</th>
+<th align="right">X5</th>
+<th align="right">X6</th>
+<th align="right">X7</th>
+<th align="right">X8</th>
+<th align="right">X9</th>
+<th align="right">X10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">-2.0885362</td>
+<td align="right">0.3423732</td>
+<td align="right">-0.9233998</td>
+<td align="right">-2.073376</td>
+<td align="right">-0.7654786</td>
+<td align="right">0.9219680</td>
+<td align="right">0.7594247</td>
+<td align="right">-0.1217451</td>
+<td align="right">1.6954245</td>
+<td align="right">0.5734866</td>
+</tr>
+<tr class="even">
+<td align="right">-0.1175502</td>
+<td align="right">-1.2874148</td>
+<td align="right">-1.2586714</td>
+<td align="right">-0.298645</td>
+<td align="right">-0.4212600</td>
+<td align="right">-1.6207986</td>
+<td align="right">-1.2957225</td>
+<td align="right">-1.4325636</td>
+<td align="right">-2.1401349</td>
+<td align="right">-4.2040516</td>
+</tr>
+<tr class="odd">
+<td align="right">1.0838560</td>
+<td align="right">-0.2311009</td>
+<td align="right">0.7615014</td>
+<td align="right">1.657593</td>
+<td align="right">2.5983310</td>
+<td align="right">-0.1589165</td>
+<td align="right">0.3315429</td>
+<td align="right">-0.1099338</td>
+<td align="right">-1.4331883</td>
+<td align="right">-0.4711233</td>
+</tr>
+<tr class="even">
+<td align="right">0.3114455</td>
+<td align="right">-0.0254042</td>
+<td align="right">-0.9531035</td>
+<td align="right">-1.041942</td>
+<td align="right">-0.0916165</td>
+<td align="right">0.4973498</td>
+<td align="right">-0.7480691</td>
+<td align="right">-0.7668086</td>
+<td align="right">0.3052686</td>
+<td align="right">0.7092195</td>
+</tr>
+<tr class="odd">
+<td align="right">0.1734135</td>
+<td align="right">-0.8367188</td>
+<td align="right">0.1164273</td>
+<td align="right">-1.354056</td>
+<td align="right">1.2083313</td>
+<td align="right">2.8615076</td>
+<td align="right">0.5138862</td>
+<td align="right">-0.1630269</td>
+<td align="right">1.4508274</td>
+<td align="right">0.7460531</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>以下でデータの相関行列をプロットします。</p>
+<pre class="r"><code>cor.plot(cor(df_data), numbers = T)</code></pre>
+<p><img src="fa_basics_files/figure-html/data-1.png" width="672" /></p>
+</div>
+</div>
+<div class="section level2">
+<h2>探索的因子分析の実行</h2>
+<div class="section level3">
+<h3>因子数を決める</h3>
+<!--
+#### ガットマン基準
+観測変数の相関行列の固有値が1.0以上の数を因子数とするのがガットマン基準です。
+
+```r
+cat(eigen(cor(df_data))$values) # 相関行列の固有値の算出
+```
+
+```
+## 4.252251 3.254922 0.5551202 0.4625078 0.3942911 0.336638 0.2315883 0.2052107 0.1668114 0.14066
+```
+-->
+<div class="section level4">
+<h4>スクリーテスト</h4>
+<p>スクリーテストでは，観測変数の相関行列の固有値の変化がなだらかになる直前の固有値の数を因子数とします。以下のように固有値を大きい順に並べたものをスクリープロットと呼びます。</p>
+<pre class="r"><code>VSS.scree(df_data)</code></pre>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-35-1.png" width="672" /> このスクリープロットより，真の因子数 (データを生成した真のモデルの因子の数) である2が選択されます。 観測変数の相関行列の固有値が1.0以上の数を因子数とするのがガットマン基準です。 ガットマン基準でも因子数は2が選択されます。</p>
+<!--
+#### 平行分析
+
+
+```r
+result.fa <- fa.parallel(df_data)
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : A loading greater than abs(1) was detected. Examine the loadings
+## carefully.
+```
+
+```
+## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
+## = np.obs, : The estimated weights for the factor scores are probably
+## incorrect. Try a different factor extraction method.
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : An ultra-Heywood case was detected. Examine the results carefully
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : A loading greater than abs(1) was detected. Examine the loadings
+## carefully.
+```
+
+```
+## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
+## = np.obs, : The estimated weights for the factor scores are probably
+## incorrect. Try a different factor extraction method.
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : An ultra-Heywood case was detected. Examine the results carefully
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : A loading greater than abs(1) was detected. Examine the loadings
+## carefully.
+```
+
+```
+## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
+## = np.obs, : The estimated weights for the factor scores are probably
+## incorrect. Try a different factor extraction method.
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
+## rotate, : An ultra-Heywood case was detected. Examine the results carefully
+```
+
+<img src="fa_basics_files/figure-html/unnamed-chunk-36-1.png" width="672" />
+
+```
+## Parallel analysis suggests that the number of factors =  2  and the number of components =  2
+```
+
+```r
+print(result.fa, sort = TRUE)
+```
+
+```
+## Call: fa.parallel(x = df_data)
+## Parallel analysis suggests that the number of factors =  2  and the number of components =  2 
+## 
+##  Eigen Values of 
+##   Original factors Resampled data Simulated data Original components
+## 1             4.04           0.76           0.72                4.25
+## 2             2.27           0.38           0.40                3.25
+##   Resampled components Simulated components
+## 1                 1.52                 1.51
+## 2                 1.33                 1.36
+```
+-->
+</div>
+</div>
+<div class="section level3">
+<h3>因子負荷の推定</h3>
+<p>以下では最尤法により因子負荷を推定しています。 また，varimax法で因子負荷の直交回転を行っています。</p>
+<pre class="r"><code>res_fa &lt;- fa(r = df_data, 
+             nfactors = 2,       # 因子数
+             rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
+             fm = &quot;ml&quot;          # 最尤法を指定
+             )
+
+cor.plot(res_fa, numbers = T)</code></pre>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-37-1.png" width="672" /> 以下で因子分析の結果を表示します (長くなるのでここでは出力は省略します)。</p>
+<pre class="r"><code>print(res_fa)</code></pre>
+</div>
+<div class="section level3">
+<h3>因子スコアの推定</h3>
+<p>推定した因子分析モデルから 回答者ごとの因子スコア (<span class="math inline">\(f\)</span>) を推定します。 因子スコアはfaを実行した際も計算されていますが (<code>res_fa$scores</code>で取り出せます)，ここではGerlachらが用いた方法と 同じ結果を出すHarmanの方法で再度推定してみます。</p>
+<pre class="r"><code>fsc &lt;- factor.scores(df_data, 
+                     f = res_fa, 
+                     method = &quot;Harman&quot;)</code></pre>
+<p>推定された因子スコアを，真の因子の値と比較してみましょう。</p>
+<pre class="r"><code># データフレームにまとめる
+df_fs &lt;- cbind(df_fs, fsc$scores)
+
+# 散布図をプロットする
+plot(df_fs)</code></pre>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-40-1.png" width="672" /> 因子“ML1”の因子スコアと(真の)因子f1が， 因子“ML2”の因子スコアと因子f2が強く相関し，推定がうまくいっていることがわかります。</p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

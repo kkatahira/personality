@@ -345,6 +345,9 @@ div.tocify {
   <a href="index.html">ホーム</a>
 </li>
 <li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
   <a href="GMM_basics.html">混合正規分布モデル</a>
 </li>
       </ul>
@@ -413,9 +416,8 @@ for (idx in 1:n.sample) {
 
 # データフレームに格納
 df_data &lt;- data.frame(dat)</code></pre>
-</div>
-<div class="section level2">
-<h2>データの確認</h2>
+<div class="section level3">
+<h3>データの確認</h3>
 <p>データが正しくデータフレームに格納されているか，以下で確認します。</p>
 <pre class="r"><code>dim(df_data)</code></pre>
 <pre><code>## [1] 1000    2</code></pre>
@@ -451,6 +453,7 @@ df_data &lt;- data.frame(dat)</code></pre>
 </tr>
 </tbody>
 </table>
+</div>
 </div>
 <div class="section level3">
 <h3>データをプロットする</h3>
