@@ -413,22 +413,22 @@ dat2 &lt;- rmvnorm(n = 1000,
 df_data &lt;- data.frame(rbind(dat1,dat2))</code></pre>
 <p>今後，プロットや密度関数推定のために， 扱う変数の範囲を指定しておきます。</p>
 <p>そのため，以下で実際のデータの最大値，最小値を求めます。</p>
-<pre class="r"><code>apply(df_data,2,max)</code></pre>
-<pre><code>##       X1       X2 
-## 3.810277 3.727961</code></pre>
 <pre class="r"><code>apply(df_data,2,min)</code></pre>
 <pre><code>##        X1        X2 
 ## -3.385580 -4.302781</code></pre>
+<pre class="r"><code>apply(df_data,2,max)</code></pre>
+<pre><code>##       X1       X2 
+## 3.810277 3.727961</code></pre>
 <p>全体のサンプルが収まるように，いずれの変数も-4.5から4.5の範囲にします。</p>
-<pre class="r"><code>xmax &lt;- c(4.5, 4.5)    # (X1の最大値，X2の最大値) 
-xmin &lt;- c(-4.5, -4.5)  # (X1の最小値，X2の最小値) </code></pre>
+<pre class="r"><code>xmin &lt;- c(-4.5, -4.5)  # (X1の最小値，X2の最小値) 
+xmax &lt;- c(4.5, 4.5)    # (X1の最大値，X2の最大値) </code></pre>
 <div class="section level3">
 <h3>生成データの確認</h3>
 <p>以下でデータの散布図をプロットします。</p>
 <pre class="r"><code>par(pty = &quot;s&quot;)
 # グループごとに色分け
 plot(dat1[,1],dat1[,2],
-     pch=&quot;.&quot;,cex = 2, 
+     pch = &quot;.&quot;, cex = 2, 
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))
 points(dat2[,1],dat2[,2],
@@ -440,7 +440,7 @@ plot(df_data$X1,df_data$X2,
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
-<p>色分けをしない散布図だと，(1,1)に高密度な領域があるのがわかりにくいですね。 密度を推定することで，それがわかりやすくなります。</p>
+<p>色分けをしない散布図だと，(X1,X2) = (1,1)に高密度な領域があるのがわかりにくいと思います。 密度を推定することで，それがわかりやすくなります。以下，それを実行します。</p>
 </div>
 </div>
 <div class="section level2">
@@ -462,12 +462,16 @@ density.original &lt;- kd$estimate</code></pre>
 <p>以下で推定した密度のカラーマップを作ります。</p>
 <pre class="r"><code>par(pty = &quot;s&quot;)
 
-# Panel 1 (original data)
 image(density.original,
       x = eval.points.x,
       y = eval.points.y,
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
       col = viridis::viridis(20))</code></pre>
+<pre><code>## Registered S3 methods overwritten by &#39;ggplot2&#39;:
+##   method         from 
+##   [.quosures     rlang
+##   c.quosures     rlang
+##   print.quosures rlang</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>(X1, X2) = (1, 1) の周辺に密度の高い領域が存在することがはっきりします。</p>
 </div>
@@ -477,14 +481,14 @@ image(density.original,
 <!-- 上の作業はapply関数を使えば1行で書けます。 -->
 <pre class="r"><code>x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)</code></pre>
 <p>上の1行は，関数applyで各列に関数sampleを適用しています。sampleは引数の配列の順番をシャッフルする関数です。</p>
-<p>これをfor文で書くと以下のようになります。</p>
+<p>(参考) これをfor文で書くと以下のようになります。</p>
 <pre class="r"><code>x_shuffeled &lt;- matrix(0,n.sample,2)
 
 for (idx in 1:2)
   x_shuffeled[,idx] &lt;- sample(df_data[,idx])</code></pre>
 <p>以下でシャッフルしたデータの散布図を見てみます。</p>
 <pre class="r"><code>par(pty = &quot;s&quot;) 
-plot(x_shuffeled[,1],x_shuffeled[,2],
+plot(x_shuffeled[,1], x_shuffeled[,2],
      pch=&quot;.&quot;,cex = 2, 
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))</code></pre>
@@ -514,7 +518,7 @@ image(kd_null$estimate,
       main = &quot;null model&quot;, zlim = c(0,zmax), 
       col = viridis::viridis(20))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /> 左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
-<p>次に，二つの密度の差分をってみましょう。</p>
+<p>次に，二つの密度の差分をってみます。</p>
 <pre class="r"><code># 密度の差分をとる
 # ただし，ヌルモデルの方が密度が高い領域はゼロに
 diff &lt;- pmax(density.original - kd_null$estimate, 0) 
@@ -529,7 +533,7 @@ image(diff,
       main = &quot;Difference&quot;, zlim = c(0,zmax),
       col = viridis::viridis(20))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<p>この差が有意なものか，どうか検定してみます。 検定はヌルモデルの密度はシャッフルの仕方で変わるので，それぞれの位置でヌルモデルの密度の分布をもとめ，その分布の中の棄却域に入れば有意であるとします。Gerlachらは有意水準を0.01としています。</p>
+<p>この差が有意なものかどうかGerlachらにならい検定してみます。 検定はヌルモデルの密度はシャッフルの仕方で変わるので，それぞれの位置でヌルモデルの密度の分布を求め，その分布の中の棄却域に入れば有意であるとします。Gerlachらは有意水準を0.01としています。</p>
 <pre class="r"><code>n.shuffle &lt;- 1000 # シャッフルする回数
 
 # ヌルモデルの密度を超えた回数を格納する配列
@@ -561,21 +565,21 @@ d.shuffle &lt;- density.sum / n.shuffle
 
 # p値を，ヌルモデルの密度を超えた回数の割合として計算
 p.value &lt;- count_exceedance / n.shuffle</code></pre>
-<p>1%水準で有意になっている領域をグレーでプロットします。</p>
+<p>1%水準で有意になっている領域をグレーで塗りつぶします。</p>
 <pre class="r"><code>par(pty=&quot;s&quot;)
 image(eval.points.x,
       eval.points.y,
       z = (p.value &lt; 0.01), # 有意な領域はTRUEに
-      col = c( rgb(0, 0, 0, alpha=0.0),
-               rgb(0.2,0.2, 0.8, alpha=0.5)),
+      col = c( rgb(0, 0, 0, alpha = 0.0),
+               rgb(0.2,0.2, 0.8, alpha = 0.5)),
       xlim = c(xmin[1],xmax[1]), 
       ylim = c(xmin[2],xmax[2]),
       zlim = c(0,1),
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
       cex.axis = 1.5, cex.lab = 1.5
 )</code></pre>
-<p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /> 確かに(1,1)周辺は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
-<p>データの密度が低いところは，推定誤差などの影響も受けやすくなりますし， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の 5%に満たないところは除外してみます。</p>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /> (1,1)周辺の領域は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
+<p>データの密度が低いところは，推定誤差などの影響も受けやすくなり， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の 5%に満たないところは除外してみます。</p>
 <pre class="r"><code>d.threshold &lt;- max(density.original) * 0.05
 
 par(pty=&quot;s&quot;)
@@ -592,7 +596,7 @@ image(eval.points.x,
       cex.axis = 1.5, cex.lab = 1.5
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-<p>さらに，Gerlachらはオリジナルなデータの密度とヌルモデルの密度の平均値の 比をenrichmentと定義し， クラスターの中心が<span class="math inline">\(p &lt; 0.01\)</span> という基準に加え，enrichment <span class="math inline">\(&gt;\)</span> 1.25になるクラスターをmeaningな クラスターとしています。このenrichmentに関する制約もつけてみます。</p>
+<p>さらに，Gerlachらはオリジナルなデータの密度とヌルモデルの密度の平均値の 比を’enrichment’と定義し， クラスターの中心が<span class="math inline">\(p &lt; 0.01\)</span> という基準に加え，enrichment <span class="math inline">\(&gt;\)</span> 1.25になるクラスターをmeaningfulな クラスターとしています。このenrichmentに関する制約も加えてみます。</p>
 <pre class="r"><code>par(pty=&quot;s&quot;)
 image(eval.points.x,
       eval.points.y,
@@ -607,7 +611,8 @@ image(eval.points.x,
       cex.axis = 1.5, cex.lab = 1.5
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<p>これでもまだ“ごみクラスター”は残ります。 (fMRIのデータ解析で行われるように，クラスターサイズで 有意性を判定するという方法も考えられますが，ここでは立ち入らないことにしましょう。) Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような評価を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。 また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価は計算負荷の問題から現実的ではなくなります。</p>
+<p>これでもまだ“ごみクラスター”は残ります。 (fMRIのデータ解析で行われるように，クラスターサイズで 有意性を判定するという方法も考えられます。) Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような計算を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。</p>
+<p>また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価は計算負荷の問題から現実的ではなくなります。計算したところで，可視化することは困難です。</p>
 </div>
 
 
