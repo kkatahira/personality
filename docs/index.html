@@ -12,7 +12,7 @@
 
 
 
-<title>「機械学習と心理学との接点」補足資料ホーム</title>
+<title>「機械学習と心理学との接点」補足資料</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -365,7 +365,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料ホーム</h1>
+<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料</h1>
 
 </div>
 
@@ -373,7 +373,7 @@ div.tocify {
 <div class="section level2">
 <h2>このサイトについて</h2>
 <p>(2019/09/04 作成中です。まだ見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。)</p>
-<p>本サイトは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)のサポートサイトです。</p>
+<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)の補足情報を記します。</p>
 </div>
 <div class="section level2">
 <h2>内容</h2>
@@ -389,10 +389,16 @@ div.tocify {
 </div>
 <div class="section level2">
 <h2>本サイトの方針</h2>
+<div class="section level3">
+<h3>仮定している生成プロセスからデータを作る</h3>
 <p>本サイトに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルの背後に仮定されているデータ生成過程を使って人工的なデータを生成してみて， そのデータを分析してみる，という方法をとっています。</p>
-<p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (その成果が，<a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira, Kunisato, Yamshita &amp; Suzuki (2019)</a>などです)。</p>
+<p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (その例が<a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira, Kunisato, Yamshita &amp; Suzuki (2019)</a>など)。</p>
 <p>本チュートリアルでも，そのような方針で行きたいと思います。</p>
-<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRに慣れていない方にも 処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない方にとっては可読性が下がるので，使用は必要最低限にとどめるようにしています。</p>
+</div>
+<div id="r" class="section level3">
+<h3>Rスクリプトの書き方</h3>
+<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRに慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない方にとっては可読性が下がるので，使用は必要最低限にとどめるようにしています。</p>
+</div>
 </div>
 
 
