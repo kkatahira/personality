@@ -350,6 +350,9 @@ div.tocify {
 <li>
   <a href="GMM_basics.html">混合正規分布モデル</a>
 </li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -529,7 +532,7 @@ cat(eigen(cor(df_data))$values) # 相関行列の固有値の算出
 <h4>スクリーテスト</h4>
 <p>スクリーテストでは，観測変数の相関行列の固有値の変化がなだらかになる直前の固有値の数を因子数とします。以下のように固有値を大きい順に並べたものをスクリープロットと呼びます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-35-1.png" width="672" /> このスクリープロットより，真の因子数 (データを生成した真のモデルの因子の数) である2が選択されます。 観測変数の相関行列の固有値が1.0以上の数を因子数とするのがガットマン基準です。 ガットマン基準でも因子数は2が選択されます。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /> このスクリープロットより，真の因子数 (データを生成した真のモデルの因子の数) である2が選択されます。 観測変数の相関行列の固有値が1.0以上の数を因子数とするのがガットマン基準です。 ガットマン基準でも因子数は2が選択されます。</p>
 <!--
 #### 平行分析
 
@@ -589,7 +592,7 @@ result.fa <- fa.parallel(df_data)
 ## rotate, : An ultra-Heywood case was detected. Examine the results carefully
 ```
 
-<img src="fa_basics_files/figure-html/unnamed-chunk-36-1.png" width="672" />
+<img src="fa_basics_files/figure-html/unnamed-chunk-18-1.png" width="672" />
 
 ```
 ## Parallel analysis suggests that the number of factors =  2  and the number of components =  2
@@ -624,7 +627,7 @@ print(result.fa, sort = TRUE)
              )
 
 cor.plot(res_fa, numbers = T)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-37-1.png" width="672" /> 以下で因子分析の結果を表示します (長くなるのでここでは出力は省略します)。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-19-1.png" width="672" /> 以下で因子分析の結果を表示します (長くなるのでここでは出力は省略します)。</p>
 <pre class="r"><code>print(res_fa)</code></pre>
 </div>
 <div class="section level3">
@@ -639,7 +642,7 @@ df_fs &lt;- cbind(df_fs, fsc$scores)
 
 # 散布図をプロットする
 plot(df_fs)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-40-1.png" width="672" /> 因子“ML1”の因子スコアと(真の)因子f1が， 因子“ML2”の因子スコアと因子f2が強く相関し，推定がうまくいっていることがわかります。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-22-1.png" width="672" /> 因子“ML1”の因子スコアと(真の)因子f1が， 因子“ML2”の因子スコアと因子f2が強く相関し，推定がうまくいっていることがわかります。また，factor 1の方が真の因子負荷量が大きく，ノイズに対するシグナル比が高いため因子スコアの推定精度は高くなっています。</p>
 </div>
 </div>
 

@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>カーネル密度推定</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">カーネル密度推定</h1>
+
+</div>
+
+
+<p>ここでは，Rのksパッケージを使ったカーネル密度推定を行います。 カーネル密度推定は，データから確率密度関数を推定するノンパラメトリックな手法の一つです。</p>
+<!-- 定義 -->
+<!-- $x1, x2, ..., x_n$ を（未知の）確率密度関数 $ƒ$ を持つ独立同分布からの標本とする。カーネル関数 $K$、バンド幅（平滑化パラメータ）$h$ のカーネル密度推定量は -->
+<!-- ${\hat{f}}_{h}(x) =  -->
+<!-- {\frac{1}{nh}} -->
+<!-- \sum_{i=1}^{n}K \left({\frac {x-x_{i}}{h}}\right)}  -->
+<!-- {{\hat {f}}_{h}(x)={\frac {1}{nh}} -->
+<!-- \sum_{i=1}^{n}K\left({\frac {x-x_{i}}{h}}\right)}$ -->
+<!-- カーネル関数としては、標準的なガウス関数 -->
+<!-- $ K(x)={1 \over {\sqrt {2\pi }}}\,e^{-x^{2}/2}} $ -->
+<!-- （平均がゼロで分散が1）を採用することが多い。 -->
+<div class="section level2">
+<h2>準備</h2>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下のコマンドをコンソールに入力してインスト―ルしてください。</p>
+<pre class="r"><code># install.packages(&quot;ks&quot;)
+# install.packages(&quot;fields&quot;)
+# install.packages(&quot;mvtnorm&quot;)</code></pre>
+</div>
+<div class="section level2">
+<h2>ライブラリ読み込み</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(ks)
+library(fields) # for image.plot
+library(mvtnorm)</code></pre>
+</div>
+<div class="section level2">
+<h2>データの生成</h2>
+<p>ここでは1000人は2次元の標準正規分布 (平均は(0,0), 分散・共分散行列は単位行列という) に従い， 100人は平均は(1,1) 分散・共分散行列は対角成分が0.05，非対角成分は0の正規分布に従うとします。 座標(1,1)付近の密度が高くなっているというデータです。</p>
+<pre class="r"><code># 乱数のシードを決定
+set.seed(1)
+
+dat1 &lt;- rmvnorm(n = 10000,
+                mean = c(0,0),
+                sigma = diag(2)  )
+
+dat2 &lt;- rmvnorm(n = 1000,
+                mean = c(1.0,1.0),
+                sigma = diag(2)*0.05  )
+
+# データを連結してデータフレームに格納
+df_data &lt;- data.frame(rbind(dat1,dat2))</code></pre>
+<p>今後，プロットや密度関数推定のために， 扱う変数の範囲を指定しておきます。</p>
+<p>そのため，以下で実際のデータの最大値，最小値を求めます。</p>
+<pre class="r"><code>apply(df_data,2,max)</code></pre>
+<pre><code>##       X1       X2 
+## 3.810277 3.727961</code></pre>
+<pre class="r"><code>apply(df_data,2,min)</code></pre>
+<pre><code>##        X1        X2 
+## -3.385580 -4.302781</code></pre>
+<p>全体のサンプルが収まるように，いずれの変数も-4.5から4.5の範囲にします。</p>
+<pre class="r"><code>xmax &lt;- c(4.5, 4.5)    # (X1の最大値，X2の最大値) 
+xmin &lt;- c(-4.5, -4.5)  # (X1の最小値，X2の最小値) </code></pre>
+<div class="section level3">
+<h3>生成データの確認</h3>
+<p>以下でデータの散布図をプロットします。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+# グループごとに色分け
+plot(dat1[,1],dat1[,2],
+     pch=&quot;.&quot;,cex = 2, 
+     xlim = c(xmin[1],xmax[1]), 
+     ylim = c(xmin[2],xmax[2]))
+points(dat2[,1],dat2[,2],
+       pch=&quot;.&quot;,cex = 2, col = &quot;red&quot;)</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code># 色分けせずプロット
+plot(df_data$X1,df_data$X2,
+     pch=&quot;.&quot;,cex = 2,
+     xlim = c(xmin[1],xmax[1]), 
+     ylim = c(xmin[2],xmax[2]))</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<p>色分けをしない散布図だと，(1,1)に高密度な領域があるのがわかりにくいですね。 密度を推定することで，それがわかりやすくなります。</p>
+</div>
+</div>
+<div class="section level2">
+<h2>カーネル密度推定の実行</h2>
+<p>上で生成したデータに対しカーネル密度推定を行います。</p>
+<pre class="r"><code># 最適なカーネルの幅 (bandwidth) を選択する
+Hpi &lt;- ks::Hpi.diag(x = df_data)
+
+# カーネル密度推定
+kd &lt;- ks::kde(x = df_data, H = Hpi, 
+              xmin = xmin, xmax = xmax)
+
+# 後のために，評価点の座標を記録しておく
+eval.points.x &lt;- kd$eval.points[[1]]
+eval.points.y &lt;- kd$eval.points[[2]]
+
+# データの密度の推定結果を持ち替えておく
+density.original &lt;- kd$estimate</code></pre>
+<p>以下で推定した密度のカラーマップを作ります。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+
+# Panel 1 (original data)
+image(density.original,
+      x = eval.points.x,
+      y = eval.points.y,
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      col = viridis::viridis(20))</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>(X1, X2) = (1, 1) の周辺に密度の高い領域が存在することがはっきりします。</p>
+</div>
+<div class="section level2">
+<h2>“ヌルモデル”の構築</h2>
+<p>上で見た高密度な領域が有意に高密度であるかどうか 検討するため，ヌルモデルを構築し，密度を比較 する方法を紹介します (Gerlach et al., 2018)。 まず，変数間の関係をランダマイズ (シャッフル) し， 周辺分布を保ちながら，変数間の依存関係を壊したサンプルを作ります。</p>
+<!-- 上の作業はapply関数を使えば1行で書けます。 -->
+<pre class="r"><code>x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)</code></pre>
+<p>上の1行は，関数applyで各列に関数sampleを適用しています。sampleは引数の配列の順番をシャッフルする関数です。</p>
+<p>これをfor文で書くと以下のようになります。</p>
+<pre class="r"><code>x_shuffeled &lt;- matrix(0,n.sample,2)
+
+for (idx in 1:2)
+  x_shuffeled[,idx] &lt;- sample(df_data[,idx])</code></pre>
+<p>以下でシャッフルしたデータの散布図を見てみます。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;) 
+plot(x_shuffeled[,1],x_shuffeled[,2],
+     pch=&quot;.&quot;,cex = 2, 
+     xlim = c(xmin[1],xmax[1]), 
+     ylim = c(xmin[2],xmax[2]))</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>このデータから上で紹介したカーネル密度推定を行います。</p>
+<pre class="r"><code># カーネル密度推定 
+# (bandwidth:  Hpiはオリジナルなデータで選択したものを使う)
+kd_null &lt;- ks::kde(x = x_shuffeled, H = Hpi,
+                   xmin = xmin, xmax = xmax)</code></pre>
+<p>推定した密度のカラーマップを作り，オリジナルなデータのものと比較してみます。</p>
+<pre class="r"><code>par(mfrow=c(1,2), pty = &quot;s&quot;)
+
+# 密度の最大値を求める
+zmax &lt;- max(density.original,kd_null$estimate)
+
+image(density.original,
+      x = eval.points.x,
+      y = eval.points.y,
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;, 
+      main = &quot;original data&quot;, zlim = c(0,zmax),
+      col = viridis::viridis(20))
+
+image(kd_null$estimate,
+      x = eval.points.x,
+      y = eval.points.y,
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      main = &quot;null model&quot;, zlim = c(0,zmax), 
+      col = viridis::viridis(20))</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /> 左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
+<p>次に，二つの密度の差分をってみましょう。</p>
+<pre class="r"><code># 密度の差分をとる
+# ただし，ヌルモデルの方が密度が高い領域はゼロに
+diff &lt;- pmax(density.original - kd_null$estimate, 0) 
+  
+zmax &lt;- max(diff)
+
+par(pty = &quot;s&quot;)
+image(diff,
+      x = eval.points.x,
+      y = eval.points.y,
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;, 
+      main = &quot;Difference&quot;, zlim = c(0,zmax),
+      col = viridis::viridis(20))</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>この差が有意なものか，どうか検定してみます。 検定はヌルモデルの密度はシャッフルの仕方で変わるので，それぞれの位置でヌルモデルの密度の分布をもとめ，その分布の中の棄却域に入れば有意であるとします。Gerlachらは有意水準を0.01としています。</p>
+<pre class="r"><code>n.shuffle &lt;- 1000 # シャッフルする回数
+
+# ヌルモデルの密度を超えた回数を格納する配列
+count_exceedance &lt;- array(0, dim(density.original))
+
+# ヌルモデルの密度の和を格納する配列
+density.sum &lt;- array(0, dim(density.original))
+
+for (idxs in 1:n.shuffle) {
+  
+  # シャッフル
+  x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)
+  
+  # カーネル密度推定の実行
+  k.shuffle &lt;- ks::kde(x = x_shuffeled, H = Hpi, xmin = xmin, xmax = xmax)
+  
+  # ヌルモデルより密度が高い領域は1を足す
+  count_exceedance &lt;- count_exceedance + 
+    as.numeric(density.original &lt; k.shuffle$estimate)
+  
+  if (idxs == 1)
+    density.sum &lt;- k.shuffle$estimate 
+  else
+    density.sum &lt;- density.sum + k.shuffle$estimate
+}
+
+# ヌルモデルの密度の平均を計算
+d.shuffle &lt;- density.sum / n.shuffle
+
+# p値を，ヌルモデルの密度を超えた回数の割合として計算
+p.value &lt;- count_exceedance / n.shuffle</code></pre>
+<p>1%水準で有意になっている領域をグレーでプロットします。</p>
+<pre class="r"><code>par(pty=&quot;s&quot;)
+image(eval.points.x,
+      eval.points.y,
+      z = (p.value &lt; 0.01), # 有意な領域はTRUEに
+      col = c( rgb(0, 0, 0, alpha=0.0),
+               rgb(0.2,0.2, 0.8, alpha=0.5)),
+      xlim = c(xmin[1],xmax[1]), 
+      ylim = c(xmin[2],xmax[2]),
+      zlim = c(0,1),
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      cex.axis = 1.5, cex.lab = 1.5
+)</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /> 確かに(1,1)周辺は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
+<p>データの密度が低いところは，推定誤差などの影響も受けやすくなりますし， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の 5%に満たないところは除外してみます。</p>
+<pre class="r"><code>d.threshold &lt;- max(density.original) * 0.05
+
+par(pty=&quot;s&quot;)
+image(eval.points.x,
+      eval.points.y,
+      z = (p.value &lt; 0.01 &amp; density.original &gt; d.threshold), 
+      # 有意な領域，かつd.thresholdより密度が高い領域はTRUEに
+      col = c( rgb(0, 0, 0, alpha=0.0),
+               rgb(0.2,0.2, 0.2, alpha=0.5)),
+      xlim = c(xmin[1],xmax[1]), 
+      ylim = c(xmin[2],xmax[2]),
+      zlim = c(0,1),
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      cex.axis = 1.5, cex.lab = 1.5
+)</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>さらに，Gerlachらはオリジナルなデータの密度とヌルモデルの密度の平均値の 比をenrichmentと定義し， クラスターの中心が<span class="math inline">\(p &lt; 0.01\)</span> という基準に加え，enrichment <span class="math inline">\(&gt;\)</span> 1.25になるクラスターをmeaningな クラスターとしています。このenrichmentに関する制約もつけてみます。</p>
+<pre class="r"><code>par(pty=&quot;s&quot;)
+image(eval.points.x,
+      eval.points.y,
+      z = (p.value &lt; 0.01 &amp; density.original &gt; d.threshold &amp; 
+             density.original / d.shuffle &gt; 1.25), # enrichmentが1.25を超えるという条件を追加
+      col = c( rgb(0, 0, 0, alpha=0.0),
+               rgb(0.2,0.2, 0.2, alpha=0.5)),
+      xlim = c(-5,5),
+      ylim = c(-5,4.5),
+      zlim = c(0,1),
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      cex.axis = 1.5, cex.lab = 1.5
+)</code></pre>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>これでもまだ“ごみクラスター”は残ります。 (fMRIのデータ解析で行われるように，クラスターサイズで 有意性を判定するという方法も考えられますが，ここでは立ち入らないことにしましょう。) Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような評価を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。 また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価は計算負荷の問題から現実的ではなくなります。</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
