@@ -384,15 +384,13 @@ div.tocify {
 <div class="section level2">
 <h2>準備</h2>
 <p>本ページで使用するパッケージがインストールされていない場合は，以下のコマンドをコンソールに入力してインスト―ルしてください。</p>
-<pre class="r"><code># install.packages(&quot;ks&quot;)
-# install.packages(&quot;fields&quot;)
-# install.packages(&quot;mvtnorm&quot;)</code></pre>
+<pre class="r"><code>install.packages(&quot;ks&quot;)
+install.packages(&quot;mvtnorm&quot;)</code></pre>
 </div>
 <div class="section level2">
 <h2>ライブラリ読み込み</h2>
 <p>必要なパッケージを読み込みます。</p>
 <pre class="r"><code>library(ks)
-library(fields) # for image.plot
 library(mvtnorm)</code></pre>
 </div>
 <div class="section level2">
@@ -401,10 +399,12 @@ library(mvtnorm)</code></pre>
 <pre class="r"><code># 乱数のシードを決定
 set.seed(1)
 
+# 多数派の集団
 dat1 &lt;- rmvnorm(n = 10000,
                 mean = c(0,0),
                 sigma = diag(2)  )
 
+# 高密度なクラスターをなす集団
 dat2 &lt;- rmvnorm(n = 1000,
                 mean = c(1.0,1.0),
                 sigma = diag(2)*0.05  )
@@ -476,9 +476,8 @@ image(density.original,
 <p>(X1, X2) = (1, 1) の周辺に密度の高い領域が存在することがはっきりします。</p>
 </div>
 <div class="section level2">
-<h2>“ヌルモデル”の構築</h2>
+<h2>ヌルモデルの構築</h2>
 <p>上で見た高密度な領域が有意に高密度であるかどうか 検討するため，ヌルモデルを構築し，密度を比較 する方法を紹介します (Gerlach et al., 2018)。 まず，変数間の関係をランダマイズ (シャッフル) し， 周辺分布を保ちながら，変数間の依存関係を壊したサンプルを作ります。</p>
-<!-- 上の作業はapply関数を使えば1行で書けます。 -->
 <pre class="r"><code>x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)</code></pre>
 <p>上の1行は，関数applyで各列に関数sampleを適用しています。sampleは引数の配列の順番をシャッフルする関数です。</p>
 <p>(参考) これをfor文で書くと以下のようになります。</p>
@@ -497,12 +496,14 @@ plot(x_shuffeled[,1], x_shuffeled[,2],
 <pre class="r"><code># カーネル密度推定 
 # (bandwidth:  Hpiはオリジナルなデータで選択したものを使う)
 kd_null &lt;- ks::kde(x = x_shuffeled, H = Hpi,
-                   xmin = xmin, xmax = xmax)</code></pre>
+                   xmin = xmin, xmax = xmax)
+
+density.shuffle &lt;- kd_null$estimate</code></pre>
 <p>推定した密度のカラーマップを作り，オリジナルなデータのものと比較してみます。</p>
 <pre class="r"><code>par(mfrow=c(1,2), pty = &quot;s&quot;)
 
 # 密度の最大値を求める
-zmax &lt;- max(density.original,kd_null$estimate)
+zmax &lt;- max(density.original, density.shuffle)
 
 image(density.original,
       x = eval.points.x,
@@ -511,17 +512,20 @@ image(density.original,
       main = &quot;original data&quot;, zlim = c(0,zmax),
       col = viridis::viridis(20))
 
-image(kd_null$estimate,
+image(density.shuffle,
       x = eval.points.x,
       y = eval.points.y,
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
       main = &quot;null model&quot;, zlim = c(0,zmax), 
       col = viridis::viridis(20))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /> 左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
+</div>
+<div class="section level2">
+<h2>ヌルモデルとの比較によるクラスターの評価</h2>
 <p>次に，二つの密度の差分をってみます。</p>
 <pre class="r"><code># 密度の差分をとる
 # ただし，ヌルモデルの方が密度が高い領域はゼロに
-diff &lt;- pmax(density.original - kd_null$estimate, 0) 
+diff &lt;- pmax(density.original - density.shuffle, 0) 
   
 zmax &lt;- max(diff)
 
@@ -548,7 +552,8 @@ for (idxs in 1:n.shuffle) {
   x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)
   
   # カーネル密度推定の実行
-  k.shuffle &lt;- ks::kde(x = x_shuffeled, H = Hpi, xmin = xmin, xmax = xmax)
+  k.shuffle &lt;- ks::kde(x = x_shuffeled, H = Hpi, 
+                       xmin = xmin, xmax = xmax)
   
   # ヌルモデルより密度が高い領域は1を足す
   count_exceedance &lt;- count_exceedance + 
@@ -561,7 +566,7 @@ for (idxs in 1:n.shuffle) {
 }
 
 # ヌルモデルの密度の平均を計算
-d.shuffle &lt;- density.sum / n.shuffle
+d.shuffle.mean &lt;- density.sum / n.shuffle
 
 # p値を，ヌルモデルの密度を超えた回数の割合として計算
 p.value &lt;- count_exceedance / n.shuffle</code></pre>
@@ -571,12 +576,11 @@ image(eval.points.x,
       eval.points.y,
       z = (p.value &lt; 0.01), # 有意な領域はTRUEに
       col = c( rgb(0, 0, 0, alpha = 0.0),
-               rgb(0.2,0.2, 0.8, alpha = 0.5)),
+               rgb(0.2,0.2, 0.2, alpha = 0.5)),
       xlim = c(xmin[1],xmax[1]), 
       ylim = c(xmin[2],xmax[2]),
       zlim = c(0,1),
-      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
-      cex.axis = 1.5, cex.lab = 1.5
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /> (1,1)周辺の領域は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
 <p>データの密度が低いところは，推定誤差などの影響も受けやすくなり， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の 5%に満たないところは除外してみます。</p>
@@ -587,13 +591,12 @@ image(eval.points.x,
       eval.points.y,
       z = (p.value &lt; 0.01 &amp; density.original &gt; d.threshold), 
       # 有意な領域，かつd.thresholdより密度が高い領域はTRUEに
-      col = c( rgb(0, 0, 0, alpha=0.0),
-               rgb(0.2,0.2, 0.2, alpha=0.5)),
+      col = c( rgb(0, 0, 0, alpha = 0.0),
+               rgb(0.2,0.2, 0.2, alpha = 0.5)),
       xlim = c(xmin[1],xmax[1]), 
       ylim = c(xmin[2],xmax[2]),
       zlim = c(0,1),
-      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
-      cex.axis = 1.5, cex.lab = 1.5
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <p>さらに，Gerlachらはオリジナルなデータの密度とヌルモデルの密度の平均値の 比を’enrichment’と定義し， クラスターの中心が<span class="math inline">\(p &lt; 0.01\)</span> という基準に加え，enrichment <span class="math inline">\(&gt;\)</span> 1.25になるクラスターをmeaningfulな クラスターとしています。このenrichmentに関する制約も加えてみます。</p>
@@ -601,18 +604,17 @@ image(eval.points.x,
 image(eval.points.x,
       eval.points.y,
       z = (p.value &lt; 0.01 &amp; density.original &gt; d.threshold &amp; 
-             density.original / d.shuffle &gt; 1.25), # enrichmentが1.25を超えるという条件を追加
+             density.original / d.shuffle.mean &gt; 1.25), # enrichmentが1.25を超えるという条件を追加
       col = c( rgb(0, 0, 0, alpha=0.0),
                rgb(0.2,0.2, 0.2, alpha=0.5)),
-      xlim = c(-5,5),
-      ylim = c(-5,4.5),
+      xlim = c(xmin[1],xmax[1]), 
+      ylim = c(xmin[2],xmax[2]),
       zlim = c(0,1),
-      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
-      cex.axis = 1.5, cex.lab = 1.5
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<p>これでもまだ“ごみクラスター”は残ります。 (fMRIのデータ解析で行われるように，クラスターサイズで 有意性を判定するという方法も考えられます。) Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような計算を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。</p>
-<p>また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価は計算負荷の問題から現実的ではなくなります。計算したところで，可視化することは困難です。</p>
+<p>これでもまだ“ごみクラスター”は残っています。 <!-- (fMRIのデータ解析で行われるように，クラスターサイズで --> <!-- 有意性を判定するという方法も考えられます。) --> Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような計算を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。</p>
+<p>また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価は計算負荷の問題から現実的ではなくなります。</p>
 </div>
 
 
