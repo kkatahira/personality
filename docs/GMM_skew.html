@@ -12,7 +12,7 @@
 
 
 
-<title>「機械学習と心理学との接点」補足資料</title>
+<title>混合正規分布モデル 歪みのある分布へのフィット</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -365,54 +365,190 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料</h1>
+<h1 class="title toc-ignore">混合正規分布モデル 歪みのある分布へのフィット</h1>
 
 </div>
 
 
+<p>(2019/09/06 作成中)</p>
+<p>ここでは，歪みのある分布へGMMをフィットすると 過剰に多めのコンポーネントが選択されるということを確認します。 また，その性質がサンプルサイズにどのように依存するか調べてみます。</p>
 <div class="section level2">
-<h2>このサイトについて</h2>
-<p>(2019/09/06 作成中です。まだ見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。)</p>
-<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)で紹介する方法をRで実行するための情報を掲載しています。</p>
-<hr />
-</div>
-<div class="section level2">
-<h2>内容</h2>
-<p>本チュートリアルでは，大規模なパーソナリティの回答データから4つのタイプ (類型)を見出した <a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlach et al. (2018)</a> の方法を解説します。</p>
-<p>この論文では“state-of-the-art”なクラスタリング手法を使ったと書かれていますが， その解析法の要素技術はどれも古典的な機械学習・統計分析の手法です。</p>
-<p>本サイトでは，その要素技術である以下の3つをRのパッケージを使って実現する方法を紹介します。</p>
-<ul>
-<li><a href="fa_basics.html">因子分析</a></li>
-<li><a href="GMM_basics.html">混合正規分布モデル (Gaussian Mixture Model, GMM)</a></li>
-<li><a href="kd_basics.html">カーネル密度推定</a></li>
-</ul>
-<p>Gerlachの解析は，以下のような流れで行われます。</p>
-<ol style="list-style-type: decimal">
-<li>パーソナリティに関する質問項目の回答データから (探索的) 因子分析により，5つの因子を推定。</li>
-<li>回答者ごとの5つの因子スコアを推定。</li>
-<li>5次元の全回答者の因子スコアのデータに混合正規分布モデルをフィットする。 　コンポーネント数 (クラスター数) はBICなどで選択する。</li>
-<li>因子スコアのデータ，および因子の次元間をシャッフルしたデータに対しカーネル密度推定を適用して，各クラスターの中心の座標の密度を計算する。その密度が オリジナルなデータがシャッフルデータのものより有意に高い場合にそのクラスターを’meaningful cluster’と判定する。</li>
-</ol>
-<p>余裕があれば，Gerlachらの分析を再現するコードや，その注意点も追加していきます。 また，機械学習や統計モデリングを心理学のデータ解析に使用する方法やその注意点について議論します。</p>
-<hr />
-<p>発展的検討</p>
-<ul>
-<li><a href="GMM_skew.Rmd">GMMにおける分布の歪みの効果</a></li>
-</ul>
-<hr />
-</div>
-<div class="section level2">
-<h2>本サイトの方針</h2>
+<h2>準備</h2>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
+<pre class="r"><code>install.packages(&quot;mclust&quot;)
+install.packages(&quot;mvtnorm&quot;)
+install.packages(&quot;sn&quot;) # skew-normal distribution distributionを扱うためのパッケージ
+install.packages(&quot;tidyverse&quot;) </code></pre>
 <div class="section level3">
-<h3>自分で作ったデータを使う</h3>
-<p>本サイトに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルの背後に仮定されているデータ生成過程を使って人工的なデータを生成してみて， そのデータを分析してみる，という方法をとっています。</p>
-<p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (その例が<a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira, Kunisato, Yamshita &amp; Suzuki (2019)</a>など)。</p>
-<p>本チュートリアルでも，そのような方針で行きたいと思います。</p>
+<h3>必要なパッケージの読み込み</h3>
+<p>以下で必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(mvtnorm)
+library(mclust)
+library(sn)
+library(tidyverse) # ggplot用</code></pre>
 </div>
-<div id="r" class="section level3">
-<h3>Rスクリプトの書き方</h3>
-<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRにはあまり慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない人 (私自信そうですが…) にとっては流れがつかみにくくなるので，使用は必要最低限にとどめるようにしています。</p>
 </div>
+<div class="section level2">
+<h2>データの生成</h2>
+<p>デモに使うデータを生成します。 ここではデータは2次元のデータであり，それぞれ独立に skew-normal distributionから生成します。</p>
+<pre class="r"><code>set.seed(1)
+n.sample &lt;- 1000
+
+X1 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
+X2 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
+
+df_data &lt;- data.frame(cbind(X1,X2))</code></pre>
+<div class="section level3">
+<h3>データをプロットする</h3>
+<p>生成したデータを以下でプロットしてみます。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+plot(df_data$X1, df_data$X2, pch=&quot;.&quot;,
+     cex = 2, xlab=&quot;X1&quot;, ylab=&quot;X2&quot;)</code></pre>
+<p><img src="GMM_skew_files/figure-html/unnamed-chunk-4-1.png" width="672" /> 以下で推定した密度のカラーマップを作ります。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+# 最適なカーネルの幅 (bandwidth) を選択する
+Hpi &lt;- ks::Hpi.diag(x = df_data)
+
+# カーネル密度推定
+kd &lt;- ks::kde(x = df_data, H = Hpi)
+
+image(kd$estimate,
+      x = kd$eval.points[[1]],
+      y = kd$eval.points[[2]],
+      xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
+      col = viridis::viridis(20))</code></pre>
+<p><img src="GMM_skew_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="mclustgmm" class="section level3">
+<h3>MclustによるGMMのフィッティング</h3>
+<p>BICにより，コンポーネント数を選択します。</p>
+<pre class="r"><code>BIC &lt;- mclustBIC(df_data, 
+                 G = 1:15, # 候補となるコンポーネント数
+                 modelNames = &quot;VVI&quot;
+                 )
+plot(BIC)</code></pre>
+<p><img src="GMM_skew_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>コンポーネント数が3のときにBICの値が最大 (MClustの仕様では大きい方が良いモデル) となり，選択されます。</p>
+<p>BICで選択されたモデルでモデルフィッティングをしてみます。</p>
+<pre class="r"><code>mod1 &lt;- Mclust(df_data, x = BIC)
+
+par(pty = &quot;s&quot;)
+plot(mod1, what = &quot;classification&quot;)</code></pre>
+<p><img src="GMM_skew_files/figure-html/unnamed-chunk-7-1.png" width="672" /> データ生成に使った分布はクラスター構造はない単峰の分布なのですが，歪んだ構造 (裾野が大きい値の方に伸びている) を表現するために3つの正規分布のコンポーネントが使われています。一見，3つのクラスターに分かれているように見えますが，少なくとも上の二つのコンポーネントに実際に密度のピークがあるわけではないので解釈には注意が必要です。</p>
+</div>
+</div>
+<div class="section level2">
+<h2>サンプルサイズ依存性</h2>
+<p>上のようなGMMで選択されるコンポーネントがサンプルサイズに どのように依存するか調べてみます。</p>
+<p>与えられたサンプル数のデータを生成して， BICでGMMのコンポーネント数を選択するという関数を作ります。</p>
+<pre class="r"><code>GMM_simulation &lt;- function(n.sample) {
+  
+  X1 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
+  X2 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
+  
+  BIC &lt;- mclustBIC(data.frame(cbind(X1,X2)), G = 1:15, 
+                   # 候補となるコンポーネント数
+                   modelNames = &quot;VVI&quot;,verbose = FALSE)
+  which.max(BIC) # 最大のBIC (選択されたモデル) を返す
+}</code></pre>
+<!-- # scikit-learnで -->
+<!-- ```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE} -->
+<!-- sk <- reticulate::import(module = "sklearn") -->
+<!-- GMM_simulation <- function(n.sample) { -->
+<!--   X1 <- rsn(n = n.sample, dp = c(-1, 1, 4)) -->
+<!--   X2 <- rsn(n = n.sample, dp = c(-1, 1, 4)) -->
+<!--   df <- data.frame(cbind(X1,X2)) -->
+<!--   klist <- 1:12 -->
+<!--   biclog <- numeric(length(klist)) -->
+<!--   gmm_list <- list() -->
+<!--   n.rep <- 10 -->
+<!--   for (idxk in klist){ -->
+<!--     K <- klist[idxk] -->
+<!--     ll.min <- -Inf -->
+<!--     # cat("\nfitting GMM... K =", K) -->
+<!--     for (idxrun in 1:n.rep) { -->
+<!--       # cat("*") -->
+<!--       initpar <- "kmeans" -->
+<!--       ## uncomment if you want to include random intialization -->
+<!--       # if (idxrun < n.rep*0.5) -->
+<!--       #   initpar <- "kmeans" -->
+<!--       # else  -->
+<!--       #   initpar <- "random" -->
+<!--       sk_gmm <- sk$mixture$GaussianMixture -->
+<!--       gmm <- sk_gmm(as.integer(K), -->
+<!--                     n_init = 1L, -->
+<!--                     max_iter = 200L,  -->
+<!--                     init_params = initpar)  -->
+<!--       gmm$fit(df) -->
+<!--       ll <- gmm$lower_bound_ -->
+<!--       if (ll > ll.min) { -->
+<!--         ll.min <- ll -->
+<!--         cluster.center <- data.frame(gmm$means_) -->
+<!--         names(cluster.center) <- names(df) -->
+<!--         biclog[idxk] <- gmm$bic(df) -->
+<!--         gmm_list[[idxk]] <- gmm -->
+<!--       } -->
+<!--     } -->
+<!--   } -->
+<!--   which.min(biclog) # 最小のBIC (選択されたモデル) を返す -->
+<!-- } -->
+<!-- ``` -->
+<p>シミュレーションで試すサンプル数を以下のように指数関数で 作ります。(10を底とする対数軸で表示したときに等間隔になるように10のべき乗スケールで作ります)</p>
+<pre class="r"><code>n.sample.array &lt;- round(10^seq(1.2,4.8,by=0.2))
+print(n.sample.array)</code></pre>
+<pre><code>##  [1]    16    25    40    63   100   158   251   398   631  1000  1585
+## [12]  2512  3981  6310 10000 15849 25119 39811 63096</code></pre>
+</div>
+<div class="section level1">
+<h1>各サンプルサイズでシミュレーショし，選択された</h1>
+<p>コンポーネント数を記録します。</p>
+<pre class="r"><code>df_simulation &lt;- data.frame()
+
+for (idxn in seq_along(n.sample.array)){
+  cat(&quot;idxn:&quot;, idxn, &quot;\n&quot;)
+  
+  # 各サンプルサイズにつき5回実行する
+  for (idxr in 1:5){
+    df_simulation &lt;- df_simulation %&gt;%
+      rbind(data.frame(
+        nsample = n.sample.array[idxn],
+        K = GMM_simulation(n.sample.array[idxn]))
+      )
+  }
+}</code></pre>
+<pre><code>## idxn: 1 
+## idxn: 2 
+## idxn: 3 
+## idxn: 4 
+## idxn: 5 
+## idxn: 6 
+## idxn: 7 
+## idxn: 8 
+## idxn: 9 
+## idxn: 10 
+## idxn: 11 
+## idxn: 12 
+## idxn: 13 
+## idxn: 14 
+## idxn: 15 
+## idxn: 16 
+## idxn: 17 
+## idxn: 18 
+## idxn: 19</code></pre>
+</div>
+<div class="section level1">
+<h1>結果をプロットします。</h1>
+<pre class="r"><code>g &lt;- ggplot(df_simulation, aes(x=nsample, y = K)) +
+  geom_line( stat = &quot;summary&quot;, fun.y = &quot;mean&quot; ) + 
+  stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, 
+               shape = 0, size = 4) +
+  geom_jitter(width = 0.02,height = 0) + 
+  scale_x_log10() + 
+  xlab(&quot;Number of samples&quot;) + ylab(&quot;Selected number of components&quot;)
+
+print(g)</code></pre>
+<p><img src="GMM_skew_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>サンプル数が100を超えたあたりから使われるコンポーネント数が 増えていく様子がわかります。</p>
 </div>
 
 
