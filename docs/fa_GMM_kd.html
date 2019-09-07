@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Gerlachの分析法</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Gerlachの分析法</h1>
+
+</div>
+
+
+<p>ここでは，基礎編の方法を組み合わせてGerlachrらにならった一通りの解析を行います。</p>
+<div class="section level2">
+<h2>準備</h2>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
+<pre class="r"><code>install.packages(&quot;psych&quot;)
+install.packages(&quot;GPArotation&quot;)
+install.packages(&quot;ks&quot;)
+install.packages(&quot;mvtnorm&quot;)
+install.packages(&quot;tidyverse&quot;)</code></pre>
+</div>
+<div class="section level2">
+<h2>ライブラリ読み込み</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(psych)
+library(GPArotation)
+library(ks)
+library(mvtnorm)
+library(mclust)
+library(tidyverse)</code></pre>
+</div>
+<div class="section level2">
+<h2>データの生成</h2>
+<p>要素技術編と同様，回答者<span class="math inline">\(i\)</span>の項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{ij} = a_{j1} f_{i1} + a_{j2} f_{i2} + d_j u_{ij}\)</span>で与えらえるモデルを考えます。</p>
+<p>ただしここでは，<span class="math inline">\(f_{1}\)</span>，<span class="math inline">\(f_{2}\)</span>は2次元の混合正規分布から生成します。つまり， 標準的な因子分析の仮定と異なり，因子にクラスター構造があるものとします。</p>
+<pre class="r"><code># 乱数のシードを設定
+set.seed(1)
+
+# サンプル数
+n.sample &lt;- 1000
+
+n &lt;- 100 # 回答者数
+m &lt;- 10  # 項目数
+
+# 因子負荷
+a1 &lt;- c(2,2,2,2,2,0,0,0,0,0) + rnorm(10,mean=0,sd=0.5) # factor 1 項目1-5に大きい値を持つ
+a2 &lt;- c(0,0,0,0,0,1,1,1,1,1) + rnorm(10,mean=0,sd=0.5) # factor 2 項目6-10に大きい値を持つ
+
+# 仮想回答データを入れる変数のメモリを確保
+y &lt;- matrix(nrow = n.sample, ncol = m)
+
+# 真の因子の値を入れるデータフレーム
+df_fs &lt;- data.frame(matrix(nrow = n, ncol = 2))
+
+# true parameters ---------------------------
+# 3つのコンポーネントからなる正規分布を想定する
+# 各コンポーネントの平均，分散・共分散行列を設定
+true_means &lt;- list(c(0,4),   # コンポーネント1の平均ベクトル
+                   c(-3,-1), # コンポーネント2の平均ベクトル
+                   c(3,-1)   # コンポーネント3の平均ベクトル
+                   )
+true_sigmas &lt;- list(diag(2), # コンポーネント1の分散・共分散行列
+                    diag(2), # コンポーネント2の分散・共分散行列
+                    diag(2)  # コンポーネント3の分散・共分散行列
+                    )
+
+# 混合比を設定
+true_pi &lt;- c(0.4,0.3,0.3)
+
+# データを生成
+
+dat &lt;- matrix(0,nrow = n.sample, ncol = 2) 
+for (idx in 1:n.sample) {
+  # 選択するコンポーネントのインデックス
+  idxk &lt;- which.max(rmultinom(1,1,true_pi))
+  dat[idx,] &lt;- rmvnorm(n = 1,
+                      mean = true_means[[idxk]],
+                      sigma = true_sigmas[[idxk]]  )
+  
+  # 回答者idxの仮想回答データ
+  y[idx,] &lt;- a1 * dat[idx,1] + a2 * dat[idx,2] + 
+    rnorm(m, mean = 0, sd = 2) # 独自因子
+  
+  colnames(df_fs) &lt;- c(&quot;f1&quot;, &quot;f2&quot;)
+  df_fs[idx,] &lt;- dat[idx,]
+  
+}
+
+# 観測される仮想回答データをデータフレームに格納
+df_data &lt;- data.frame(y)</code></pre>
+<p>因子の散布図をプロットする。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+plot(df_fs$f1, df_fs$f2, 
+     pch=&quot;.&quot;,cex = 2, 
+     xlab=&quot;f1&quot;, ylab=&quot;f2&quot;)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<div class="section level3">
+<h3>生成データの確認</h3>
+<p>以下でデータの相関行列をプロットします。</p>
+<pre class="r"><code>cor.plot(cor(df_data), numbers = T)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/data-1.png" width="672" /></p>
+</div>
+</div>
+<div class="section level2">
+<h2>探索的因子分析の実行</h2>
+<div class="section level3">
+<h3>因子数を決める</h3>
+<p>スクリープロットで因子数を決めます。</p>
+<pre class="r"><code>VSS.scree(df_data)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>このスクリープロットより，因子数は2とします。</p>
+</div>
+<div class="section level3">
+<h3>因子負荷の推定</h3>
+<p>以下では最尤法により因子負荷を推定しています。 また，varimax法で因子負荷の直交回転を行っています。</p>
+<pre class="r"><code>res_fa &lt;- fa(r = df_data, 
+             nfactors = 2,       # 因子数
+             rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
+             fm = &quot;ml&quot;           # 最尤法を指定
+             )
+
+cor.plot(res_fa, numbers = T)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div class="section level3">
+<h3>因子スコアの推定</h3>
+<p>推定した因子分析モデルから 回答者ごとの因子スコア (<span class="math inline">\(f\)</span>) を推定します。</p>
+<pre class="r"><code>fsc &lt;- factor.scores(df_data, 
+                     f = res_fa, 
+                     method = &quot;Harman&quot;)
+
+df_sc &lt;- data.frame(fsc$scores)
+names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
+<p>推定された因子スコアをプロットしてみます。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+plot(df_sc, pch=&quot;.&quot;,cex = 2)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>データ生成に使った因子の値がよく再現されています。 因子分析のモデルは因子は正規分布と仮定されているのですが， この仮定が満たされなくても真の因子スコアが歪みなく， 構造が再現されるということは重要なことだと思います。 それができないと，因子スコアをデータとして扱った Gerlachらの結果が疑わしいものになってしまうからです。 しかし，個々でのデータは2因子であり，比較的単純な ものであり，Gerlachらの解析で推定された因子スコアの 妥当性はどの程度のものか，ということはさらなる検討が 必要だと思います。ぜひご興味のある方は検討してみてください。</p>
+</div>
+</div>
+<div id="gmm" class="section level2">
+<h2>GMMのフィッティング</h2>
+<p>BICにより，コンポーネント数を選択します。</p>
+<pre class="r"><code>BIC &lt;- mclustBIC(df_sc, 
+                 G = 1:15, # 候補となるコンポーネント数
+                 modelNames = &quot;VVI&quot;
+                 )
+plot(BIC)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>コンポーネント数が3のときにBICの値が最大 (MClustの仕様ではBICが大きい方が良いモデル) となります。</p>
+<p>BICで選択されたモデルのフィッティングの結果を見てみます。</p>
+<pre class="r"><code>mod.GMM &lt;- Mclust(df_sc, x = BIC)
+
+par(pty = &quot;s&quot;)
+plot(mod.GMM, what = &quot;classification&quot;)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div class="section level2">
+<h2>各コンポーネントの平均をプロットする。</h2>
+<p>ここでは，コンポーネントの平均ベクトルを棒グラフで表します。 ここでの例のように，2次元データの場合は上のように2次元分布 状にコンポーネントの中心をプロットできるので，わざわざ 棒グラフにする意味はあまりないのですが，Gerlachらのように 因子の数が5つ，すなわち5次元データの場合は このようなグラフでとらえるしかありません。</p>
+<pre class="r"><code>collist &lt;- list(&quot;blue&quot;,&quot;red&quot;,&quot;green&quot;, &quot;purple&quot;, &quot;orange&quot;)
+n.component &lt;- mod.GMM$G
+par(mfcol =  c(1,n.component))
+for (idx in 1:n.component) {
+  barplot(mod.GMM$parameters$mean[,idx], names.arg = c(&quot;1&quot;,&quot;2&quot;),
+                col = collist[[idx]], ylim = c(-1.2,2),
+                main = sprintf(&quot;component %d&quot;, idx), 
+          xlab = &quot;factor&quot;) 
+  abline(h = 0, lty = 2)
+}</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+<div class="section level2">
+<h2>ヌルモデルとの比較による評価</h2>
+<p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度をカーネル密度推定により推定します。要素技術編と異なり，全体の座標点ではなく，GMMのコンポーネントの平均のみの座標でこれを行います。</p>
+<pre class="r"><code># 各コンポーネントの平均の座標
+component.centers &lt;- t(mod.GMM$parameters$mean) 
+  # 列はコンポーネントのID, 行は因子に対応。
+
+n.shuffle &lt;- 1000 # シャッフルする回数
+
+n.component &lt;- mod.GMM$G  # コンポーネント数
+
+# 元データの各コンポーネントの平均の位置における密度の推定
+Hpi &lt;- ks::Hpi.diag(x = df_sc)
+k &lt;- ks::kde(x = df_sc, H = Hpi,
+             eval.points = component.centers)
+density.original &lt;- k$estimate
+
+# シャッフルデータの密度格納用行列
+density.shuffle &lt;- matrix(0, n.shuffle, nrow(component.centers))
+
+for (idxs in 1:n.shuffle) {
+
+  # シャッフルする
+  sc_shuffeled &lt;- apply(df_sc, MARGIN = 2, sample)
+  
+  # シャッフルデータの密度推定
+  k &lt;- ks::kde(x = sc_shuffeled, H = Hpi, 
+               eval.points = component.centers)
+  
+  density.shuffle[idxs,] &lt;- k$estimate
+}</code></pre>
+<p>コンポーネントごとのヌルモデルとの比較結果をプロットします。 シャッフルした回数だけ得られたヌルモデルの対数密度をヒストグラムで，元のデータの対数密度を赤い縦棒で表します。</p>
+<pre class="r"><code>par(mfcol=c(1,n.component))
+
+for (idx in 1:n.component) {
+  
+  # p値
+  p &lt;- sum(density.original[idx] &lt; density.shuffle[,idx]) / n.shuffle
+  
+  # enrichment
+  enrich &lt;- density.original[idx] / mean(density.shuffle[,idx])
+  
+  # ヌルモデルの対数密度のヒストグラムを作る
+  hist(log(density.shuffle[,idx]), 
+       xlim = c(min(min(log(density.shuffle[,idx])),
+                    log(density.original[idx])),
+                max(max(log(density.shuffle[,idx])),
+                    log(density.original[idx])*0.95)
+       ), 
+       main = sprintf(&quot;component %d, p = %.4f, 
+                      \nenrichment = %.3f&quot;,
+                      idx, p, enrich),
+       
+       xlab = &quot;log probability density&quot;
+       )
+  
+  # オリジナルデータの対数密度を赤い縦線でプロット
+  abline(v=log(density.original[idx]), col = &quot;red&quot;, lwd = 3)
+}</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>どのコンポーネントも，Gerlachが用いた p値は<span class="math inline">\(p &lt; 0.01\)</span>, enrichment <span class="math inline">\(&gt;\)</span> 1.25の基準を満たし， “meaningful cluster”と判断されます。</p>
+<hr />
+</div>
+<div class="section level2">
+<h2>ヌルモデルとの比較を関数化する</h2>
+<p>ここまででGerlachらが提案している一連の解析を行いました。 これで実際のデータも解析できるのですが，ヌルモデルとの 比較のところはスクリプトの行数が多く，毎回これを 打ち込むのは大変ですし，スクリプトも煩雑になります。</p>
+<p>そこで，今後のためにこの一連の処理は一つの関数にしておきます。 入力は，因子スコア (回答者×因子) と，各コンポーネントの平均 (コンポーネント×因子)だけで十分です。この二つと， シャッフル回数などのパラメータを引数とし， 各コンポーネントのp値やenrichmentを返す関数を作ります。</p>
+<pre class="r"><code># コンポーネントの中心の座標について，
+# ヌルモデルとの比較によるmeaningful clusterか否か判定する関数
+eval_component &lt;- function(x, # 因子スコア (回答者×因子)
+                           c.center, # (コンポーネント×因子)
+                           n.shuffle = 1000 # シャッフルする回数
+                           ) {
+  
+  xdim &lt;- ncol(x) # 因子の数 (次元数)
+  N &lt;- nrow(x) # 回答者の数
+  n.component &lt;- nrow(c.center) # コンポ――ネントの数
+  
+  # returnする変数
+  p.value &lt;- numeric(n.component)
+  enrichment &lt;- numeric(n.component)
+  
+  # 元データのカーネル密度推定
+  Hpi &lt;- ks::Hpi.diag(x = x)
+  k &lt;- ks::kde(x = x, H = Hpi,
+               eval.points = c.center)
+  density.original &lt;- k$estimate
+  
+  # シャッフルデータの密度格納用行列
+  density.shuffle &lt;- matrix(0, n.shuffle, nrow(c.center))
+  
+  for (idxs in 1:n.shuffle) {
+    
+    # シャッフルする
+    sc_shuffeled &lt;- apply(x, MARGIN = 2, sample)
+    
+    # シャッフルデータの密度推定
+    k &lt;- ks::kde(x = sc_shuffeled, H = Hpi, 
+                 eval.points = c.center)
+    
+    density.shuffle[idxs,] &lt;- k$estimate
+  }
+  
+  par(mfcol=c(1,n.component))
+  
+  # ヌルモデルの密度平均
+  density.null &lt;- colMeans(density.shuffle)
+  
+  for (idx in 1:n.component) {
+    
+    # p値
+    p.value[idx] &lt;- sum(density.original[idx] &lt; density.shuffle[,idx]) / n.shuffle
+    
+    # enrichment
+    enrichment[idx] &lt;- density.original[idx] /
+      density.null[idx]
+    
+    d.null.mean &lt;- mean(density.shuffle[,idx])
+    
+    # ヌルモデルの対数密度のヒストグラムを作る
+    hist(log(density.shuffle[,idx]), 
+         xlim = c(min(min(log(density.shuffle[,idx])),
+                      log(density.original[idx])),
+                  max(max(log(density.shuffle[,idx])),
+                      log(density.original[idx])*0.95)
+         ), 
+         main = sprintf(&quot;component %d, p = %.4f, 
+                      \nenrichment = %.3f&quot;,
+                      idx, p.value[idx], enrichment[idx]),
+         
+         xlab = &quot;log probability density&quot;
+    )
+    
+    # オリジナルデータの対数密度を赤い縦線でプロット
+    abline(v=log(density.original[idx]), col = &quot;red&quot;, lwd = 3)
+  }
+  
+  list(d.original = density.original,
+       d.null = density.null, 
+       p.value = p.value,
+       enrichment = enrichment )
+}</code></pre>
+<p>上で定義した関数を試してみます。</p>
+<pre class="r"><code>res_ec &lt;- eval_component(df_sc, component.centers) </code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre class="r"><code>print(res_ec)</code></pre>
+<pre><code>## $d.original
+## [1] 0.3069254 0.1945755 0.2252260
+## 
+## $d.null
+## [1] 0.1242366 0.1363347 0.1321298
+## 
+## $p.value
+## [1] 0 0 0
+## 
+## $enrichment
+## [1] 2.470490 1.427190 1.704582</code></pre>
+<p>この関数の出力は，データフレームにすると便利です。 例えば，meaningful clusterと判定されたコンポーネントの結果だけ 抜き出したり，enrichmentの大きい順に並べたりすることができます。</p>
+<pre class="r"><code>df_c_eval &lt;- data.frame(c.idx = 1:n.component, #コンポーネントのID
+                         res_ec) 
+head(df_c_eval,5)</code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th align="right">c.idx</th>
+<th align="right">d.original</th>
+<th align="right">d.null</th>
+<th align="right">p.value</th>
+<th align="right">enrichment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0.3069254</td>
+<td align="right">0.1242366</td>
+<td align="right">0</td>
+<td align="right">2.470490</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">0.1945755</td>
+<td align="right">0.1363347</td>
+<td align="right">0</td>
+<td align="right">1.427190</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0.2252260</td>
+<td align="right">0.1321298</td>
+<td align="right">0</td>
+<td align="right">1.704582</td>
+</tr>
+</tbody>
+</table>
+</div>
+<pre class="r"><code>head(df_c_eval,5)</code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th align="right">c.idx</th>
+<th align="right">d.original</th>
+<th align="right">d.null</th>
+<th align="right">p.value</th>
+<th align="right">enrichment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0.3069254</td>
+<td align="right">0.1242366</td>
+<td align="right">0</td>
+<td align="right">2.470490</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">0.1945755</td>
+<td align="right">0.1363347</td>
+<td align="right">0</td>
+<td align="right">1.427190</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0.2252260</td>
+<td align="right">0.1321298</td>
+<td align="right">0</td>
+<td align="right">1.704582</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>enrichmentで降順にソートします。</p>
+<pre class="r"><code>df_c_eval &lt;- df_c_eval %&gt;% arrange(desc(enrichment)) %&gt;%
+  filter(enrichment &gt; 1.25, p.value &lt; 0.01) 
+df_c_eval</code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th align="right">c.idx</th>
+<th align="right">d.original</th>
+<th align="right">d.null</th>
+<th align="right">p.value</th>
+<th align="right">enrichment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0.3069254</td>
+<td align="right">0.1242366</td>
+<td align="right">0</td>
+<td align="right">2.470490</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">0.2252260</td>
+<td align="right">0.1321298</td>
+<td align="right">0</td>
+<td align="right">1.704582</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">0.1945755</td>
+<td align="right">0.1363347</td>
+<td align="right">0</td>
+<td align="right">1.427190</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>enrichment &gt; 1.25, p.value &lt; 0.01という基準を満たす コンポーネントだけ抜き出します。(今はどのコンポーネントもこの基準を満たすので変化しません)</p>
+<pre class="r"><code>df_c_eval &lt;- df_c_eval %&gt;% filter(enrichment &gt; 1.25, p.value &lt; 0.01) </code></pre>
+<pre class="r"><code># コンポーネントの中心の座標のプロット
+par(mfcol =  c(1, nrow(df_c_eval)))
+
+ymax &lt;- max(component.centers) + abs(max(component.centers)) * 0.2
+ymin &lt;- min(component.centers) - abs(min(component.centers)) * 0.2
+
+for (idx in 1:nrow(df_c_eval)) {
+  barplot(component.centers[df_c_eval$c.idx[idx],], 
+          col = collist[[idx]], ylim = c(ymin,ymax),
+          main = sprintf(&quot;component %d,\nenrichment = %.2f\n p = %.2f&quot;, 
+                         df_c_eval$c.idx[idx], 
+                         df_c_eval$enrichment[idx],
+                         df_c_eval$p.value[idx]
+                         ), 
+          xlab = &quot;&quot;) 
+  abline(h = 0, lty = 2)
+}</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+</div>
+<div id="meaningful-cluster" class="section level2">
+<h2>meaningful clusterをプロットする関数</h2>
+<p>以上をまとめて， meaningful clusterをプロットする関数も定義しておきましょう。</p>
+<pre class="r"><code># meaningful clusterをプロットする関数
+plot_meaningful_cluster &lt;- function(res_ec, # 関数eval_componentの出力
+                           c.center, # (コンポーネント×因子)
+                           p.threshold = 0.01, # 有意水準
+                           enrichment.threshold = 1.25 # enrichmentの閾値
+                           ) {
+  
+  n.component &lt;- nrow(c.center) # コンポ――ネントの数
+  
+  df_cluster &lt;- data.frame(c.idx = 1:n.component, #コンポーネントのID
+                           res_ec) 
+  
+  df_c &lt;- df_cluster %&gt;% arrange(desc(enrichment)) %&gt;%
+    filter(enrichment &gt; enrichment.threshold, 
+           p.value &lt; p.threshold) 
+  
+  # plot
+  ymax &lt;- max(component.centers) + abs(max(component.centers)) * 0.2
+  ymin &lt;- min(component.centers) - abs(min(component.centers)) * 0.2
+  
+  for (idx in 1:nrow(df_c)) {
+    barplot(component.centers[df_c$c.idx[idx],], 
+            ylim = c(ymin,ymax),
+            main = sprintf(&quot;component %d,\nenrichment = %.2f\n p = %.2f&quot;, 
+                           df_c$c.idx[idx], 
+                           df_c$enrichment[idx],
+                           df_c$p.value[idx]
+            ), 
+            xlab = &quot;&quot;) 
+    abline(h = 0, lty = 2)
+  }
+}</code></pre>
+<p>この関数を試しに実行してみます。</p>
+<pre class="r"><code>plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
+                           component.centers, 
+                           p.threshold = 0.01, # 有意水準
+                           enrichment.threshold = 1.25 # enrichmentの閾値
+                           )</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-1.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-2.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-3.png" width="672" /></p>
+<p>関数をfunctions_component_evaluation.Rとして保存します。 このファイルは以下のようにして読み出すことができます。</p>
+<pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
+<p>次のページ()ではこの関数を使って，本ページと同じ処理を行います。</p>
+<p>また，次ページではデータ生成の過程も省略して 簡潔にするため，本ページで生成したデータを以下のようにcsv形式で保存しておきます。</p>
+<pre class="r"><code> write.csv(df_data, &quot;./data_fa_GMM1.csv&quot;, 
+             row.names = FALSE)</code></pre>
+<p>このデータは，以下のように読み出せます。</p>
+<pre class="r"><code>df_data &lt;- read.csv(&quot;./data_fa_GMM1.csv&quot;, header = TRUE)</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

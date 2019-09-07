@@ -12,7 +12,7 @@
 
 
 
-<title>「機械学習と心理学との接点」補足資料</title>
+<title>Gerlachの分析法 (ミニマム版)</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -365,68 +365,198 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料</h1>
+<h1 class="title toc-ignore">Gerlachの分析法 (ミニマム版)</h1>
 
 </div>
 
 
+<p>ここでは，<a href="fa_GMM_kd.html">こちら</a>のページで紹介した関数を使って， 一通りのGerlachらの分析の解析の流れを例示します。</p>
 <div class="section level2">
-<h2>このサイトについて</h2>
-<p>(2019/09/07 作成中です。まだ見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。)</p>
-<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)で紹介する方法をRで実行するための情報を掲載しています。</p>
-<hr />
-</div>
-<div class="section level2">
-<h2>内容</h2>
-<p>本チュートリアルでは，大規模なパーソナリティの回答データから4つのタイプ (類型)を見出した <a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlach et al. (2018)</a> の方法を解説します。</p>
-<p>この論文では“state-of-the-art”なクラスタリング手法を使ったと書かれていますが， その解析法の要素技術はどれも古典的な機械学習・統計分析の手法です。</p>
-<p>Gerlachの解析は，以下のような流れで行われます。</p>
-<ol style="list-style-type: decimal">
-<li>パーソナリティに関する質問項目の回答データから (探索的) 因子分析により，因子負荷を推定する。</li>
-<li>回答者ごとの因子スコアを推定する。</li>
-<li>全回答者の因子スコアのデータに混合正規分布モデルをフィットする。 　コンポーネント数 (クラスター数) はBICなどで選択する。</li>
-<li>因子スコアのデータ，および因子の次元間をシャッフルしたデータに対しカーネル密度推定を適用して，各クラスターの中心の座標の密度を計算する。その密度がシャッフルして因子間の依存関係を崩したデータ (ヌルモデル) の密度より有意に高い場合にそのクラスターを’meaningful cluster’と判定する。</li>
-</ol>
-<hr />
-<div class="section level3">
-<h3>要素技術編</h3>
-<p>本サイトでは，上記のGerlachらの分析の要素技術である以下の3つをRのパッケージを使って実現する方法を紹介します。</p>
-<ul>
-<li><a href="fa_basics.html">因子分析</a></li>
-<li><a href="GMM_basics.html">混合正規分布モデル (Gaussian Mixture Model, GMM)</a></li>
-<li><a href="kd_basics.html">カーネル密度推定</a></li>
-</ul>
-<hr />
-</div>
-<div class="section level3">
-<h3>実践編</h3>
-<ul>
-<li><a href="fa_GMM_kd.html">Gerlachらの分析法</a> 上記の要素技術を組み合わせてGerlachらの分析を行います。</li>
-<li><a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a><br />
-上の<a href="fa_GMM_kd.html">Gerlachらの分析</a>で作ったデータや関数などを使って，Gerlachらの分析を行うミニマムなコードを例示します。 とりあえずデータの解析を試してみたい，という方はここだけ試していただいてもよいかと思います。</li>
-</ul>
-<hr />
-</div>
-<div class="section level3">
-<h3>発展編</h3>
-<p>上記の分析の検討や，他の方法などの紹介をする予定です。 また，機械学習や統計モデリングを心理学のデータ解析に使用する方法やその注意点について議論します。</p>
-<ul>
-<li><a href="GMM_skew.html">GMMにおける分布の歪みの効果</a></li>
-</ul>
-<hr />
-</div>
+<h2>準備</h2>
+<!-- 本ページで使用するパッケージがインストールされていない場合は，以下の -->
+<!-- コマンドをコンソールに入力してインスト―ルしてください。 -->
+<!-- ```{r eval=FALSE} -->
+<!-- install.packages("psych") -->
+<!-- install.packages("GPArotation") -->
+<!-- install.packages("ks") -->
+<!-- install.packages("mvtnorm") -->
+<!-- install.packages("tidyverse") -->
+<!-- ``` -->
 </div>
 <div class="section level2">
-<h2>本サイトの方針</h2>
+<h2>ライブラリ読み込み</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(psych)
+library(GPArotation)
+library(ks)
+library(mvtnorm)
+library(mclust)
+library(tidyverse)</code></pre>
+<p><a href="fa_GMM_kd.html">こちら</a>のページで解説した クラスター評価のための関数を読み出します。</p>
+<pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
+</div>
+<div class="section level2">
+<h2>データの読み込み</h2>
+<p><a href="fa_GMM_kd.html">こちら</a>で作成したデータをデータフレームdf_dataに 読み出します。</p>
+<pre class="r"><code>df_data &lt;- read.csv(&quot;./data_fa_GMM1.csv&quot;, header = TRUE)
+head(df_data,5)</code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th align="right">X1</th>
+<th align="right">X2</th>
+<th align="right">X3</th>
+<th align="right">X4</th>
+<th align="right">X5</th>
+<th align="right">X6</th>
+<th align="right">X7</th>
+<th align="right">X8</th>
+<th align="right">X9</th>
+<th align="right">X10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">5.369310</td>
+<td align="right">1.480908</td>
+<td align="right">0.3204278</td>
+<td align="right">-1.3496938</td>
+<td align="right">1.759920</td>
+<td align="right">1.3164542</td>
+<td align="right">4.2853056</td>
+<td align="right">5.7518398</td>
+<td align="right">4.853400</td>
+<td align="right">4.436487</td>
+</tr>
+<tr class="even">
+<td align="right">8.385332</td>
+<td align="right">6.966283</td>
+<td align="right">8.3258330</td>
+<td align="right">9.6991964</td>
+<td align="right">11.668750</td>
+<td align="right">-0.2588496</td>
+<td align="right">0.1533774</td>
+<td align="right">-0.0647089</td>
+<td align="right">-1.045956</td>
+<td align="right">-2.503212</td>
+</tr>
+<tr class="odd">
+<td align="right">-3.691115</td>
+<td align="right">-3.356659</td>
+<td align="right">-3.6179367</td>
+<td align="right">-0.0886347</td>
+<td align="right">-5.675790</td>
+<td align="right">0.4823171</td>
+<td align="right">-0.1155893</td>
+<td align="right">0.3087366</td>
+<td align="right">-1.112879</td>
+<td align="right">-4.384141</td>
+</tr>
+<tr class="even">
+<td align="right">3.019875</td>
+<td align="right">6.597137</td>
+<td align="right">3.9982466</td>
+<td align="right">11.0006238</td>
+<td align="right">3.851946</td>
+<td align="right">-1.6343137</td>
+<td align="right">0.3125354</td>
+<td align="right">-0.1176835</td>
+<td align="right">-0.420932</td>
+<td align="right">-1.309458</td>
+</tr>
+<tr class="odd">
+<td align="right">-3.313268</td>
+<td align="right">-6.302669</td>
+<td align="right">-5.0662851</td>
+<td align="right">-10.1785300</td>
+<td align="right">-9.816317</td>
+<td align="right">-0.6429079</td>
+<td align="right">1.4148340</td>
+<td align="right">-0.1015601</td>
+<td align="right">-1.810785</td>
+<td align="right">-0.808941</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level2">
+<h2>探索的因子分析の実行</h2>
 <div class="section level3">
-<h3>まずは自分で作ったデータを使う</h3>
-<p>本チュートリアルに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルの背後に仮定されているデータ生成過程を使って人工的なデータを生成してみて， そのデータを分析してみる，という方法をとっています。</p>
-<p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (例として<a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://www.sciencedirect.com/science/article/pii/S0022249618300610">Toyama et al. (2019)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira et al. (2019)</a>など)。</p>
+<h3>因子数を決める</h3>
+<p>スクリープロットで因子数を決めます。</p>
+<pre class="r"><code>VSS.scree(df_data)</code></pre>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-4-1.png" width="672" /> このスクリープロットより，因子数は2とします。</p>
 </div>
-<div id="r" class="section level3">
-<h3>Rスクリプトの書き方</h3>
-<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRにはあまり慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない人 (私自身そうですが…) にとっては流れがつかみにくくなるので，使用は必要最低限にとどめるようにしています。</p>
+<div class="section level3">
+<h3>因子負荷の推定</h3>
+<p>最尤法により因子負荷を推定します。 varimax法で因子負荷の直交回転を行っています。</p>
+<pre class="r"><code>res_fa &lt;- fa(r = df_data, 
+             nfactors = 2,       # 因子数
+             rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
+             fm = &quot;ml&quot;           # 最尤法を指定
+             )
+
+cor.plot(res_fa, numbers = T)</code></pre>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 </div>
+<div class="section level3">
+<h3>因子スコアの推定</h3>
+<p>推定した因子分析モデルから 回答者ごとの因子スコア (<span class="math inline">\(f\)</span>) を推定します。</p>
+<pre class="r"><code>fsc &lt;- factor.scores(df_data, 
+                     f = res_fa, 
+                     method = &quot;Harman&quot;)
+
+df_sc &lt;- data.frame(fsc$scores)
+names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
+<!-- 推定された因子スコアをプロットしてみます。 -->
+<!-- ```{r} -->
+<!-- # 散布図をプロットする -->
+<!-- par(pty = "s") -->
+<!-- plot(df_sc, pch=".",cex = 2) -->
+<!-- ``` -->
+</div>
+</div>
+<div id="gmm" class="section level2">
+<h2>GMMのフィッティング</h2>
+<p>BICにより，コンポーネント数を選択します。</p>
+<pre class="r"><code>BIC &lt;- mclustBIC(df_sc, 
+                 G = 1:15, # 候補となるコンポーネント数
+                 modelNames = &quot;VVI&quot;
+                 )
+plot(BIC)</code></pre>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>コンポーネント数として，BICの値を最大とする (MClustの仕様ではBICが大きい方が良いモデル) ， 3が選択されます。</p>
+<p>BICで選択されたモデルの各コンポーネントの平均を求めます。</p>
+<pre class="r"><code>mod.GMM &lt;- Mclust(df_sc, x = BIC)
+
+component.centers &lt;- t(mod.GMM$parameters$mean)</code></pre>
+</div>
+<div class="section level2">
+<h2>ヌルモデルとの比較による評価</h2>
+<p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度を比較し，meaningful clusterであるか否か判定します。</p>
+<pre class="r"><code>res_ec &lt;- eval_component(df_sc, component.centers) </code></pre>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>print(res_ec)</code></pre>
+<pre><code>## $d.original
+## [1] 0.3069254 0.1945755 0.2252260
+## 
+## $d.null
+## [1] 0.1246506 0.1365058 0.1318236
+## 
+## $p.value
+## [1] 0 0 0
+## 
+## $enrichment
+## [1] 2.462285 1.425401 1.708541</code></pre>
+<p>meaningful clusterをプロットします。</p>
+<pre class="r"><code>plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
+                        component.centers, 
+                        p.threshold = 0.01, 
+                        enrichment.threshold = 1.25
+                        )</code></pre>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-1.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-2.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-3.png" width="672" /></p>
 </div>
 
 
