@@ -370,30 +370,25 @@ div.tocify {
 </div>
 
 
-<p>ここでは，基礎編の方法を組み合わせてGerlachrらにならった一通りの解析を行います。</p>
+<p>ここでは，要素技術編の3つの方法を組み合わせてGerlachらにならった一通りの解析を行ってみます。</p>
 <div class="section level2">
 <h2>準備</h2>
 <p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
 <pre class="r"><code>install.packages(&quot;psych&quot;)
 install.packages(&quot;GPArotation&quot;)
 install.packages(&quot;ks&quot;)
-install.packages(&quot;mvtnorm&quot;)
-install.packages(&quot;tidyverse&quot;)</code></pre>
-</div>
-<div class="section level2">
-<h2>ライブラリ読み込み</h2>
+install.packages(&quot;mvtnorm&quot;)</code></pre>
 <p>必要なパッケージを読み込みます。</p>
 <pre class="r"><code>library(psych)
 library(GPArotation)
 library(ks)
 library(mvtnorm)
-library(mclust)
-library(tidyverse)</code></pre>
+library(mclust)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
 <p>要素技術編と同様，回答者<span class="math inline">\(i\)</span>の項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{ij} = a_{j1} f_{i1} + a_{j2} f_{i2} + d_j u_{ij}\)</span>で与えらえるモデルを考えます。</p>
-<p>ただしここでは，<span class="math inline">\(f_{1}\)</span>，<span class="math inline">\(f_{2}\)</span>は2次元の混合正規分布から生成します。つまり， 標準的な因子分析の仮定と異なり，因子にクラスター構造があるものとします。</p>
+<p>ただしここでは，<span class="math inline">\(f_{1}\)</span>，<span class="math inline">\(f_{2}\)</span>は2次元の混合正規分布から生成します。つまり，標準的な因子分析の仮定と異なり，因子にクラスター構造があるものとします。</p>
 <pre class="r"><code># 乱数のシードを設定
 set.seed(1)
 
@@ -413,7 +408,6 @@ y &lt;- matrix(nrow = n.sample, ncol = m)
 # 真の因子の値を入れるデータフレーム
 df_fs &lt;- data.frame(matrix(nrow = n, ncol = 2))
 
-# true parameters ---------------------------
 # 3つのコンポーネントからなる正規分布を想定する
 # 各コンポーネントの平均，分散・共分散行列を設定
 true_means &lt;- list(c(0,4),   # コンポーネント1の平均ベクトル
@@ -428,8 +422,8 @@ true_sigmas &lt;- list(diag(2), # コンポーネント1の分散・共分散行
 # 混合比を設定
 true_pi &lt;- c(0.4,0.3,0.3)
 
-# データを生成
 
+# データを生成
 dat &lt;- matrix(0,nrow = n.sample, ncol = 2) 
 for (idx in 1:n.sample) {
   # 選択するコンポーネントのインデックス
@@ -442,21 +436,20 @@ for (idx in 1:n.sample) {
   y[idx,] &lt;- a1 * dat[idx,1] + a2 * dat[idx,2] + 
     rnorm(m, mean = 0, sd = 2) # 独自因子
   
+  # 真の因子スコアを記録
   colnames(df_fs) &lt;- c(&quot;f1&quot;, &quot;f2&quot;)
   df_fs[idx,] &lt;- dat[idx,]
-  
 }
 
 # 観測される仮想回答データをデータフレームに格納
 df_data &lt;- data.frame(y)</code></pre>
-<p>因子の散布図をプロットする。</p>
-<pre class="r"><code>par(pty = &quot;s&quot;)
-plot(df_fs$f1, df_fs$f2, 
-     pch=&quot;.&quot;,cex = 2, 
-     xlab=&quot;f1&quot;, ylab=&quot;f2&quot;)</code></pre>
-<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <div class="section level3">
 <h3>生成データの確認</h3>
+<p>真の因子スコアの散布図を作ります。</p>
+<pre class="r"><code>par(pty = &quot;s&quot;)
+plot(df_fs$f1, df_fs$f2, 
+     pch=&quot;.&quot;,cex = 2, xlab=&quot;f1&quot;, ylab=&quot;f2&quot;)</code></pre>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>以下でデータの相関行列をプロットします。</p>
 <pre class="r"><code>cor.plot(cor(df_data), numbers = T)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/data-1.png" width="672" /></p>
@@ -469,7 +462,7 @@ plot(df_fs$f1, df_fs$f2,
 <p>スクリープロットで因子数を決めます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
-<p>このスクリープロットより，因子数は2とします。</p>
+<p>因子数は2とします。</p>
 </div>
 <div class="section level3">
 <h3>因子負荷の推定</h3>
@@ -482,6 +475,7 @@ plot(df_fs$f1, df_fs$f2,
 
 cor.plot(res_fa, numbers = T)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>概ね，真の因子構造を反映した因子負荷が得られました。</p>
 </div>
 <div class="section level3">
 <h3>因子スコアの推定</h3>
@@ -496,7 +490,9 @@ names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
 <pre class="r"><code>par(pty = &quot;s&quot;)
 plot(df_sc, pch=&quot;.&quot;,cex = 2)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>データ生成に使った因子の値がよく再現されています。 因子分析のモデルは因子は正規分布と仮定されているのですが， この仮定が満たされなくても真の因子スコアが歪みなく， 構造が再現されるということは重要なことだと思います。 それができないと，因子スコアをデータとして扱った Gerlachらの結果が疑わしいものになってしまうからです。 しかし，個々でのデータは2因子であり，比較的単純な ものであり，Gerlachらの解析で推定された因子スコアの 妥当性はどの程度のものか，ということはさらなる検討が 必要だと思います。ぜひご興味のある方は検討してみてください。</p>
+<p>データ生成に使った因子の値がよく再現されています。</p>
+<p>因子分析のモデルは因子は正規分布と仮定されているのですが， この仮定が満たされなくても真の因子スコアが歪みなく， 構造が再現されるということは重要なことだと思います。 そうでないと，同様にして求めた因子スコアを扱った Gerlachらの結果が疑わしいものになってしまうからです。</p>
+<p>しかし，ここでのデータは2因子でかつ比較的単純な ものであり，Gerlachらの解析で推定された因子スコアの 妥当性はどの程度のものか，ということはさらなる検討が 必要だと思います。ぜひご興味のある方は検討してみてください。</p>
 </div>
 </div>
 <div id="gmm" class="section level2">
@@ -515,6 +511,7 @@ plot(BIC)</code></pre>
 par(pty = &quot;s&quot;)
 plot(mod.GMM, what = &quot;classification&quot;)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>因子スコアのクラスター構造に対応する推定結果が得られているようです。</p>
 </div>
 <div class="section level2">
 <h2>各コンポーネントの平均をプロットする。</h2>
@@ -535,8 +532,8 @@ for (idx in 1:n.component) {
 <h2>ヌルモデルとの比較による評価</h2>
 <p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度をカーネル密度推定により推定します。要素技術編と異なり，全体の座標点ではなく，GMMのコンポーネントの平均のみの座標でこれを行います。</p>
 <pre class="r"><code># 各コンポーネントの平均の座標
+# 列はコンポーネントのID, 行は因子に対応。
 component.centers &lt;- t(mod.GMM$parameters$mean) 
-  # 列はコンポーネントのID, 行は因子に対応。
 
 n.shuffle &lt;- 1000 # シャッフルする回数
 
@@ -591,104 +588,34 @@ for (idx in 1:n.component) {
   abline(v=log(density.original[idx]), col = &quot;red&quot;, lwd = 3)
 }</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<p>どのコンポーネントも，Gerlachが用いた p値は<span class="math inline">\(p &lt; 0.01\)</span>, enrichment <span class="math inline">\(&gt;\)</span> 1.25の基準を満たし， “meaningful cluster”と判断されます。</p>
+<p>どのコンポーネントも，Gerlachが用いた基準である， <span class="math inline">\(p &lt; 0.01\)</span>, enrichment <span class="math inline">\(&gt;\)</span> 1.25を満たし， “meaningful cluster”と判断されます。</p>
 <hr />
 </div>
 <div class="section level2">
 <h2>ヌルモデルとの比較を関数化する</h2>
 <p>ここまででGerlachらが提案している一連の解析を行いました。 これで実際のデータも解析できるのですが，ヌルモデルとの 比較のところはスクリプトの行数が多く，毎回これを 打ち込むのは大変ですし，スクリプトも煩雑になります。</p>
-<p>そこで，今後のためにこの一連の処理は一つの関数にしておきます。 入力は，因子スコア (回答者×因子) と，各コンポーネントの平均 (コンポーネント×因子)だけで十分です。この二つと， シャッフル回数などのパラメータを引数とし， 各コンポーネントのp値やenrichmentを返す関数を作ります。</p>
-<pre class="r"><code># コンポーネントの中心の座標について，
-# ヌルモデルとの比較によるmeaningful clusterか否か判定する関数
-eval_component &lt;- function(x, # 因子スコア (回答者×因子)
-                           c.center, # (コンポーネント×因子)
-                           n.shuffle = 1000 # シャッフルする回数
-                           ) {
-  
-  xdim &lt;- ncol(x) # 因子の数 (次元数)
-  N &lt;- nrow(x) # 回答者の数
-  n.component &lt;- nrow(c.center) # コンポ――ネントの数
-  
-  # returnする変数
-  p.value &lt;- numeric(n.component)
-  enrichment &lt;- numeric(n.component)
-  
-  # 元データのカーネル密度推定
-  Hpi &lt;- ks::Hpi.diag(x = x)
-  k &lt;- ks::kde(x = x, H = Hpi,
-               eval.points = c.center)
-  density.original &lt;- k$estimate
-  
-  # シャッフルデータの密度格納用行列
-  density.shuffle &lt;- matrix(0, n.shuffle, nrow(c.center))
-  
-  for (idxs in 1:n.shuffle) {
-    
-    # シャッフルする
-    sc_shuffeled &lt;- apply(x, MARGIN = 2, sample)
-    
-    # シャッフルデータの密度推定
-    k &lt;- ks::kde(x = sc_shuffeled, H = Hpi, 
-                 eval.points = c.center)
-    
-    density.shuffle[idxs,] &lt;- k$estimate
-  }
-  
-  par(mfcol=c(1,n.component))
-  
-  # ヌルモデルの密度平均
-  density.null &lt;- colMeans(density.shuffle)
-  
-  for (idx in 1:n.component) {
-    
-    # p値
-    p.value[idx] &lt;- sum(density.original[idx] &lt; density.shuffle[,idx]) / n.shuffle
-    
-    # enrichment
-    enrichment[idx] &lt;- density.original[idx] /
-      density.null[idx]
-    
-    d.null.mean &lt;- mean(density.shuffle[,idx])
-    
-    # ヌルモデルの対数密度のヒストグラムを作る
-    hist(log(density.shuffle[,idx]), 
-         xlim = c(min(min(log(density.shuffle[,idx])),
-                      log(density.original[idx])),
-                  max(max(log(density.shuffle[,idx])),
-                      log(density.original[idx])*0.95)
-         ), 
-         main = sprintf(&quot;component %d, p = %.4f, 
-                      \nenrichment = %.3f&quot;,
-                      idx, p.value[idx], enrichment[idx]),
-         
-         xlab = &quot;log probability density&quot;
-    )
-    
-    # オリジナルデータの対数密度を赤い縦線でプロット
-    abline(v=log(density.original[idx]), col = &quot;red&quot;, lwd = 3)
-  }
-  
-  list(d.original = density.original,
-       d.null = density.null, 
-       p.value = p.value,
-       enrichment = enrichment )
-}</code></pre>
-<p>上で定義した関数を試してみます。</p>
+<p>そこで，今後のためにこの一連の処理は関数にしておくのがよいでしょう。 入力は，因子スコア (回答者×因子) と，各コンポーネントの平均 (コンポーネント×因子)だけで十分です。この二つと， シャッフル回数などのパラメータを引数とし， 各コンポーネントのp値やenrichmentを返す関数eval_componentを作っておきます。 関数はRコード<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。こちらからダウンロードし，ワーキングディレクトリに置いて</p>
+<pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
+<p>で読み込んでください。</p>
+<p>関数eval_componentを試してみます。</p>
 <pre class="r"><code>res_ec &lt;- eval_component(df_sc, component.centers) </code></pre>
-<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre><code>## Bandwidth selection...
+## kernel dinsity estimation for original data...
+## kernel dinsity estimation for shuffled data...
+## ====================================================================================================</code></pre>
 <pre class="r"><code>print(res_ec)</code></pre>
 <pre><code>## $d.original
-## [1] 0.3069254 0.1945755 0.2252260
+## [1] 0.3083011 0.1950971 0.2258706
 ## 
 ## $d.null
-## [1] 0.1242366 0.1363347 0.1321298
+## [1] 0.1245865 0.1366899 0.1323567
 ## 
 ## $p.value
 ## [1] 0 0 0
 ## 
 ## $enrichment
-## [1] 2.470490 1.427190 1.704582</code></pre>
-<p>この関数の出力は，データフレームにすると便利です。 例えば，meaningful clusterと判定されたコンポーネントの結果だけ 抜き出したり，enrichmentの大きい順に並べたりすることができます。</p>
+## [1] 2.474595 1.427298 1.706529</code></pre>
+<p>また，この関数の出力は，データフレームにすると便利です。 例えば，meaningful clusterと判定されたコンポーネントの結果だけ 抜き出したり，enrichmentの大きい順に並べたりすることができます。</p>
 <pre class="r"><code>df_c_eval &lt;- data.frame(c.idx = 1:n.component, #コンポーネントのID
                          res_ec) 
 head(df_c_eval,5)</code></pre>
@@ -706,24 +633,24 @@ head(df_c_eval,5)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">0.3069254</td>
-<td align="right">0.1242366</td>
+<td align="right">0.3083011</td>
+<td align="right">0.1245865</td>
 <td align="right">0</td>
-<td align="right">2.470490</td>
+<td align="right">2.474595</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="right">0.1945755</td>
-<td align="right">0.1363347</td>
+<td align="right">0.1950971</td>
+<td align="right">0.1366899</td>
 <td align="right">0</td>
-<td align="right">1.427190</td>
+<td align="right">1.427298</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="right">0.2252260</td>
-<td align="right">0.1321298</td>
+<td align="right">0.2258706</td>
+<td align="right">0.1323567</td>
 <td align="right">0</td>
-<td align="right">1.704582</td>
+<td align="right">1.706529</td>
 </tr>
 </tbody>
 </table>
@@ -743,24 +670,24 @@ head(df_c_eval,5)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">0.3069254</td>
-<td align="right">0.1242366</td>
+<td align="right">0.3083011</td>
+<td align="right">0.1245865</td>
 <td align="right">0</td>
-<td align="right">2.470490</td>
+<td align="right">2.474595</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="right">0.1945755</td>
-<td align="right">0.1363347</td>
+<td align="right">0.1950971</td>
+<td align="right">0.1366899</td>
 <td align="right">0</td>
-<td align="right">1.427190</td>
+<td align="right">1.427298</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="right">0.2252260</td>
-<td align="right">0.1321298</td>
+<td align="right">0.2258706</td>
+<td align="right">0.1323567</td>
 <td align="right">0</td>
-<td align="right">1.704582</td>
+<td align="right">1.706529</td>
 </tr>
 </tbody>
 </table>
@@ -783,30 +710,31 @@ df_c_eval</code></pre>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">0.3069254</td>
-<td align="right">0.1242366</td>
+<td align="right">0.3083011</td>
+<td align="right">0.1245865</td>
 <td align="right">0</td>
-<td align="right">2.470490</td>
+<td align="right">2.474595</td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
-<td align="right">0.2252260</td>
-<td align="right">0.1321298</td>
+<td align="right">0.2258706</td>
+<td align="right">0.1323567</td>
 <td align="right">0</td>
-<td align="right">1.704582</td>
+<td align="right">1.706529</td>
 </tr>
 <tr class="odd">
 <td align="right">2</td>
-<td align="right">0.1945755</td>
-<td align="right">0.1363347</td>
+<td align="right">0.1950971</td>
+<td align="right">0.1366899</td>
 <td align="right">0</td>
-<td align="right">1.427190</td>
+<td align="right">1.427298</td>
 </tr>
 </tbody>
 </table>
 </div>
 <p>enrichment &gt; 1.25, p.value &lt; 0.01という基準を満たす コンポーネントだけ抜き出します。(今はどのコンポーネントもこの基準を満たすので変化しません)</p>
 <pre class="r"><code>df_c_eval &lt;- df_c_eval %&gt;% filter(enrichment &gt; 1.25, p.value &lt; 0.01) </code></pre>
+<p>この処理をもとに，meaningful clusterだけ平均をプロットしてみます。</p>
 <pre class="r"><code># コンポーネントの中心の座標のプロット
 par(mfcol =  c(1, nrow(df_c_eval)))
 
@@ -828,49 +756,15 @@ for (idx in 1:nrow(df_c_eval)) {
 </div>
 <div id="meaningful-cluster" class="section level2">
 <h2>meaningful clusterをプロットする関数</h2>
-<p>以上をまとめて， meaningful clusterをプロットする関数も定義しておきましょう。</p>
-<pre class="r"><code># meaningful clusterをプロットする関数
-plot_meaningful_cluster &lt;- function(res_ec, # 関数eval_componentの出力
-                           c.center, # (コンポーネント×因子)
-                           p.threshold = 0.01, # 有意水準
-                           enrichment.threshold = 1.25 # enrichmentの閾値
-                           ) {
-  
-  n.component &lt;- nrow(c.center) # コンポ――ネントの数
-  
-  df_cluster &lt;- data.frame(c.idx = 1:n.component, #コンポーネントのID
-                           res_ec) 
-  
-  df_c &lt;- df_cluster %&gt;% arrange(desc(enrichment)) %&gt;%
-    filter(enrichment &gt; enrichment.threshold, 
-           p.value &lt; p.threshold) 
-  
-  # plot
-  ymax &lt;- max(component.centers) + abs(max(component.centers)) * 0.2
-  ymin &lt;- min(component.centers) - abs(min(component.centers)) * 0.2
-  
-  for (idx in 1:nrow(df_c)) {
-    barplot(component.centers[df_c$c.idx[idx],], 
-            ylim = c(ymin,ymax),
-            main = sprintf(&quot;component %d,\nenrichment = %.2f\n p = %.2f&quot;, 
-                           df_c$c.idx[idx], 
-                           df_c$enrichment[idx],
-                           df_c$p.value[idx]
-            ), 
-            xlab = &quot;&quot;) 
-    abline(h = 0, lty = 2)
-  }
-}</code></pre>
-<p>この関数を試しに実行してみます。</p>
+<p>以上をまとめて， meaningful clusterをプロットする関数plot_meaningful_clusterも定義しておきましょう。こちらも Rコード<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。</p>
+<p>この関数を実行してみます。</p>
 <pre class="r"><code>plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
                            component.centers, 
                            p.threshold = 0.01, # 有意水準
                            enrichment.threshold = 1.25 # enrichmentの閾値
                            )</code></pre>
-<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-1.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-2.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-22-3.png" width="672" /></p>
-<p>関数をfunctions_component_evaluation.Rとして保存します。 このファイルは以下のようにして読み出すことができます。</p>
-<pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
-<p>次のページ()ではこの関数を使って，本ページと同じ処理を行います。</p>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-1.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-2.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-3.png" width="672" /></p>
+<p>次のページ(<a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a> )ではこの関数を使って，本ページと同じ処理を行います。</p>
 <p>また，次ページではデータ生成の過程も省略して 簡潔にするため，本ページで生成したデータを以下のようにcsv形式で保存しておきます。</p>
 <pre class="r"><code> write.csv(df_data, &quot;./data_fa_GMM1.csv&quot;, 
              row.names = FALSE)</code></pre>

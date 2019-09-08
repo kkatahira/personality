@@ -107,12 +107,14 @@ plot_meaningful_cluster <- function(res_ec, c.center,
     filter(enrichment > enrichment.threshold, 
            p.value < p.threshold) 
   
-  ymax <- max(component.centers) + abs(max(component.centers)) * 0.2
-  ymin <- min(component.centers) - abs(min(component.centers)) * 0.2
+  ymax <- max(c.center) + abs(max(c.center)) * 0.2
+  ymin <- min(c.center) - abs(min(c.center)) * 0.2
+  
   
   if (nrow(df_c) > 0){
+    
     for (idx in 1:nrow(df_c)) {
-      barplot(height = as.matrix(component.centers[df_c$c.idx[idx],]), 
+      barplot(height = c.center[df_c$c.idx[idx],], 
               ylim = c(ymin,ymax),
               main = sprintf("component %d,\nenrichment = %.2f\n p = %.2f", 
                              df_c$c.idx[idx], 

@@ -370,34 +370,28 @@ div.tocify {
 </div>
 
 
-<p>ここでは，<a href="fa_GMM_kd.html">こちら</a>のページで紹介した関数を使って， 一通りのGerlachらの分析の解析の流れを例示します。</p>
+<p>ここでは，<a href="fa_GMM_kd.html">Gerlachらの分析法</a>で紹介した関数を使ってGerlachらの分析を行う方法を例示します。</p>
 <div class="section level2">
 <h2>準備</h2>
-<!-- 本ページで使用するパッケージがインストールされていない場合は，以下の -->
-<!-- コマンドをコンソールに入力してインスト―ルしてください。 -->
-<!-- ```{r eval=FALSE} -->
-<!-- install.packages("psych") -->
-<!-- install.packages("GPArotation") -->
-<!-- install.packages("ks") -->
-<!-- install.packages("mvtnorm") -->
-<!-- install.packages("tidyverse") -->
-<!-- ``` -->
-</div>
-<div class="section level2">
-<h2>ライブラリ読み込み</h2>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
+<pre class="r"><code>install.packages(&quot;psych&quot;)
+install.packages(&quot;GPArotation&quot;)
+install.packages(&quot;ks&quot;)
+install.packages(&quot;mclust&quot;)
+install.packages(&quot;tidyverse&quot;)</code></pre>
 <p>必要なパッケージを読み込みます。</p>
 <pre class="r"><code>library(psych)
 library(GPArotation)
 library(ks)
-library(mvtnorm)
 library(mclust)
 library(tidyverse)</code></pre>
-<p><a href="fa_GMM_kd.html">こちら</a>のページで解説した クラスター評価のための関数を読み出します。</p>
+<p>クラスター評価のための関数を読み出します。</p>
 <pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
+<p>このRスクリプトは<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">こちら</a>からダウンロードできます。</p>
 </div>
 <div class="section level2">
 <h2>データの読み込み</h2>
-<p><a href="fa_GMM_kd.html">こちら</a>で作成したデータをデータフレームdf_dataに 読み出します。</p>
+<p><a href="fa_GMM_kd.html">こちら</a>で作成したデータ<a href="https://kkatahira.github.io/personality/data_fa_GMM1.csv">data_fa_GMM1.csv</a>をデータフレームdf_dataに読み出します。</p>
 <pre class="r"><code>df_data &lt;- read.csv(&quot;./data_fa_GMM1.csv&quot;, header = TRUE)
 head(df_data,5)</code></pre>
 <div class="kable-table">
@@ -487,11 +481,11 @@ head(df_data,5)</code></pre>
 <h3>因子数を決める</h3>
 <p>スクリープロットで因子数を決めます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
-<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-4-1.png" width="672" /> このスクリープロットより，因子数は2とします。</p>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-5-1.png" width="672" /> 減少がなだらかになる直前までの固有値の数2を因子数として選択します。</p>
 </div>
 <div class="section level3">
 <h3>因子負荷の推定</h3>
-<p>最尤法により因子負荷を推定します。 varimax法で因子負荷の直交回転を行っています。</p>
+<p>最尤法により因子負荷を推定します。</p>
 <pre class="r"><code>res_fa &lt;- fa(r = df_data, 
              nfactors = 2,       # 因子数
              rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
@@ -499,23 +493,16 @@ head(df_data,5)</code></pre>
              )
 
 cor.plot(res_fa, numbers = T)</code></pre>
-<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
 <div class="section level3">
 <h3>因子スコアの推定</h3>
-<p>推定した因子分析モデルから 回答者ごとの因子スコア (<span class="math inline">\(f\)</span>) を推定します。</p>
-<pre class="r"><code>fsc &lt;- factor.scores(df_data, 
-                     f = res_fa, 
+<p>推定した因子分析モデルから回答者ごとの因子スコア (<span class="math inline">\(f\)</span>) を推定します。</p>
+<pre class="r"><code>fsc &lt;- factor.scores(df_data, f = res_fa, 
                      method = &quot;Harman&quot;)
 
 df_sc &lt;- data.frame(fsc$scores)
 names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
-<!-- 推定された因子スコアをプロットしてみます。 -->
-<!-- ```{r} -->
-<!-- # 散布図をプロットする -->
-<!-- par(pty = "s") -->
-<!-- plot(df_sc, pch=".",cex = 2) -->
-<!-- ``` -->
 </div>
 </div>
 <div id="gmm" class="section level2">
@@ -526,7 +513,7 @@ names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
                  modelNames = &quot;VVI&quot;
                  )
 plot(BIC)</code></pre>
-<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>コンポーネント数として，BICの値を最大とする (MClustの仕様ではBICが大きい方が良いモデル) ， 3が選択されます。</p>
 <p>BICで選択されたモデルの各コンポーネントの平均を求めます。</p>
 <pre class="r"><code>mod.GMM &lt;- Mclust(df_sc, x = BIC)
@@ -536,27 +523,31 @@ component.centers &lt;- t(mod.GMM$parameters$mean)</code></pre>
 <div class="section level2">
 <h2>ヌルモデルとの比較による評価</h2>
 <p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度を比較し，meaningful clusterであるか否か判定します。</p>
-<pre class="r"><code>res_ec &lt;- eval_component(df_sc, component.centers) </code></pre>
-<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>res_ec &lt;- eval_component(df_sc, component.centers, 
+                         n.shuffle = 100) </code></pre>
+<pre><code>## Bandwidth selection...
+## kernel dinsity estimation for original data...
+## kernel dinsity estimation for shuffled data...
+## ==========</code></pre>
 <pre class="r"><code>print(res_ec)</code></pre>
 <pre><code>## $d.original
-## [1] 0.3069254 0.1945755 0.2252260
+## [1] 0.3083011 0.1950971 0.2258706
 ## 
 ## $d.null
-## [1] 0.1246506 0.1365058 0.1318236
+## [1] 0.1247994 0.1345762 0.1339343
 ## 
 ## $p.value
 ## [1] 0 0 0
 ## 
 ## $enrichment
-## [1] 2.462285 1.425401 1.708541</code></pre>
+## [1] 2.470372 1.449716 1.686428</code></pre>
 <p>meaningful clusterをプロットします。</p>
 <pre class="r"><code>plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
-                        component.centers, 
+                        as.matrix(component.centers), 
                         p.threshold = 0.01, 
                         enrichment.threshold = 1.25
                         )</code></pre>
-<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-1.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-2.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-10-3.png" width="672" /></p>
+<p><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-11-1.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-11-2.png" width="672" /><img src="fa_GMM_kd_minimum_files/figure-html/unnamed-chunk-11-3.png" width="672" /></p>
 </div>
 
 
