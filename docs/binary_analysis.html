@@ -12,7 +12,7 @@
 
 
 
-<title>「機械学習と心理学との接点」補足資料</title>
+<title>二値化解析による非一様性の分析</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,6 +26,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -368,75 +370,111 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料</h1>
+<h1 class="title toc-ignore">二値化解析による非一様性の分析</h1>
 
 </div>
 
 
+<p>ここでは，GMMなどを用いずに大雑把に分布の非一様性 (偏り具合) を とらえるためにそれぞれの因子スコアの符号でクラス (象限) を分類し 数の分布を見るという分析法を試してみます ( この分析法は我々の<a href="https://psyarxiv.com/wua9j/">コメント論文</a>に対する<a href="https://psyarxiv.com/rvpfs/">リプライ論文</a>で用いられていますが，もともとは我々がコメント論文の投稿前に著者に送った原稿の中で提案していたものです)。</p>
 <div class="section level2">
-<h2>このサイトについて</h2>
-<p>(2019/09/08現在 作成中です。見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。お気づきの点は片平までご連絡ください。)</p>
-<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)で紹介する方法をRで実行するための情報を掲載しています。</p>
-<hr />
-</div>
-<div class="section level2">
-<h2>内容</h2>
-<p>本チュートリアルでは，大規模なパーソナリティの回答データから4つのタイプ (類型)を見出した <a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlach et al. (2018)</a> の方法を解説します。</p>
-<p>この論文では“state-of-the-art”なクラスタリング手法を使ったと書かれていますが，その解析法の要素技術はどれも古典的な機械学習・統計分析の手法です。</p>
-<hr />
+<h2>準備</h2>
 <div class="section level3">
-<h3>要素技術編</h3>
-<p>その要素技術である以下の3つをRのパッケージを使って実現する方法を紹介します。</p>
-<ul>
-<li><a href="fa_basics.html">因子分析</a></li>
-<li><a href="GMM_basics.html">混合正規分布モデル (Gaussian Mixture Model, GMM)</a></li>
-<li><a href="kd_basics.html">カーネル密度推定</a></li>
-</ul>
-<p>Gerlachの分析は，上記の手法を組み合わせ，以下のような流れで行われます。</p>
+<h3>因子スコアを読み出す</h3>
+<p><a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>で作成した 因子スコアデータを読み出します。パスはご自身のものに合わせてください。</p>
+<pre class="r"><code>df_sc &lt;- read.csv(&quot;C:/data/personality/fs_IPIP300.csv&quot;, header = TRUE)</code></pre>
+<p>このcsvファイルは<a href="https://kkatahira.github.io/personality/fs_IPIP300.csv">こちら</a>からダウンロードできます。</p>
+<p>今回の解析ではデータの平均がゼロにそろえられていることが 重要なので，関数scaleを使って因子ごとに標準化をします (Gerlachらも因子スコアは標準化して使っています)。</p>
+<pre class="r"><code>df_sc &lt;- data.frame(scale(df_sc))</code></pre>
+</div>
+</div>
+<div id="--" class="section level2">
+<h2>それぞれのクラス (象限) に入る回答者の数をカウント</h2>
+<pre class="r"><code>N &lt;- nrow(df_sc)  # 行 (回答者)の数
+n.class &lt;- 2^5    # クラス (象限) の数
+# それぞれの因子が高低の二値であり，5因子あるので2^5 = 32個になる 
+
+count.class &lt;- numeric(n.class)  # それぞれのクラスのカウンター
+
+# クラスのインデックスを10進数で表し，カウントする
+for (idx in 1:N){
+  cls.idx &lt;- 1 + 
+    as.integer(df_sc[idx,1] &gt; 0) * 1 + # &quot;N&quot;
+    as.integer(df_sc[idx,2] &gt; 0) * 2 + # &quot;E&quot;
+    as.integer(df_sc[idx,3] &gt; 0) * 4 + # &quot;O&quot;
+    as.integer(df_sc[idx,4] &gt; 0) * 8 + # &quot;A&quot;
+    as.integer(df_sc[idx,5] &gt; 0) * 16  # &quot;C&quot;
+  count.class[cls.idx] &lt;- count.class[cls.idx] + 1
+}
+
+# 2進数表現 (0: &lt; 0, 1: &gt; 0) でクラスのラベルを作る (&quot;NEOAC&quot;の順)
+lb &lt;- lapply(1:n.class, 
+             function(x) paste((as.integer(intToBits(x-1))[1:5]), collapse=&quot;&quot;))
+
+# 各因子ごとの0,1とその回答者の数を表すデータフレームを用意
+df.binary &lt;- data.frame(matrix(0, nrow = 2^5, ncol = 6))
+names(df.binary) &lt;- c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&quot;C&quot;,&quot;Freq&quot;)
+for (idxr in 1:n.class){
+  for (idxc in 1:5) {
+    df.binary[idxr,idxc] &lt;- 
+      as.integer(substr(lb[[idxr]],idxc,idxc))
+  }
+  df.binary[idxr,6] &lt;- count.class[idxr]
+}
+
+head(df.binary)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["N"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["E"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["O"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["A"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["C"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Freq"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"3815","_rn_":"1"},{"1":"1","2":"0","3":"0","4":"0","5":"0","6":"4175","_rn_":"2"},{"1":"0","2":"1","3":"0","4":"0","5":"0","6":"4920","_rn_":"3"},{"1":"1","2":"1","3":"0","4":"0","5":"0","6":"4859","_rn_":"4"},{"1":"0","2":"0","3":"1","4":"0","5":"0","6":"4142","_rn_":"5"},{"1":"1","2":"0","3":"1","4":"0","5":"0","6":"4000","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div class="section level2">
+<h2>それぞれのクラスの数をプロット</h2>
+<pre class="r"><code>barplot(count.class,
+        names.arg = lb, 
+        horiz = TRUE, 
+        las = 1,
+        xlab = &quot;Frequency&quot;)
+
+# 全てのクラスが同じ割合で起こると仮定した場合の頻度
+abline(v = N/n.class, lty = 2) </code></pre>
+<p><img src="binary_analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>次に，頻度順に並び替えてみます。 また，全てのクラスが同じ割合で起こると仮定したモデルの99%信頼区間も 数値的に求めます。</p>
+<pre class="r"><code>lab &lt;- unlist(lb)
+oidx &lt;- order(count.class,decreasing = F)
+mp &lt;- barplot(count.class[oidx],
+              names.arg = lab[oidx], 
+              horiz = TRUE, 
+              las = 1, 
+              xlab = &quot;Frequency&quot;)
+
+# 全てのクラスが同じ割合で起こると仮定した場合の頻度
+abline(v = N/n.class, lty = 2)
+
+# 全てのクラスが同じ割合で起こると仮定した場合の99%信頼区間を
+# 求める
+n.sample &lt;- 1000
+a &lt;- rmultinom(n = n.sample,N,rep(1/n.class,n.class))
+b &lt;- apply(a, MARGIN = 2, function(i){sort(i,decreasing = F)})
+b &lt;- t(b)
+ci &lt;- apply(b, MARGIN = 2, function(i){quantile(i, c(.01,.99))})
+lines(ci[1,], mp[,1], &quot;l&quot;, lty = 1, col = &quot;red3&quot;)
+lines(ci[2,], mp[,1], &quot;l&quot;, lty = 1, col = &quot;red3&quot;)</code></pre>
+<p><img src="binary_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /> 一様性を仮定した場合の信頼区間から大きく外れて多い/少ないクラスがあり， 分布に強い非一様性があることがわかります。</p>
+<p>ここで，以下の二点に気を付ける必要があります。<br />
+- 因子スコアは標準化されているため，それぞれの因子スコアでは平均より上と下はちょうど半分いるはず。したがって，今回観察された偏りは，単に各因子の平均が高い低いということとは関係ない。<br />
+- 因子分析は直交回転を仮定していた。そのため，厳密ではないが因子スコアも相関はほぼゼロになる。したがって，この偏りは2次の相関では説明できない，高次の因子間の依存関係を反映したものと思われる。</p>
+</div>
+<div class="section level2">
+<h2>未解決問題</h2>
+<p>以下の二点は未解決問題です。</p>
 <ol style="list-style-type: decimal">
-<li>パーソナリティに関する質問項目への回答データから (探索的) 因子分析を行い，因子負荷を推定する。それによりBig fiveモデルに対応する5つの因子スコアを回答者ごとに推定する。</li>
-<li>全回答者の因子スコアのデータに混合正規分布モデルをフィットする。 　コンポーネント数 (クラスター数) はBICなどで選択する。</li>
-<li>因子スコアのデータ，および因子の次元間をシャッフルしたデータに対しカーネル密度推定を適用して，各クラスターの中心の座標の密度を計算する。その密度が因子間の依存関係を崩したシャッフルデータ の密度 (ヌルモデル)より有意に高い場合にそのクラスターを’meaningful cluster’と判定する。そのmeaningful clusterがパーソナリティの「類型」に対応づけられる。</li>
+<li><p>この非一様性がどのようなメカニズムで出てくるのか (本当に人類のパーソナリティの偏りを反映したものか，回答スタイルなどの個人差などによるアーティファクトなのか，用いられた心理尺度の性質なのか，あるいはWEB調査に回答したサンプルの偏りなのか)</p></li>
+<li><p>この偏りを説明する適切な統計モデルはあるのか。</p></li>
 </ol>
-</div>
-<div class="section level3">
-<h3>実践編</h3>
-<ul>
-<li><a href="fa_GMM_kd.html">Gerlachらの分析法</a> 上記の要素技術を組み合わせてGerlachらの分析を行います。</li>
-<li><a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a><br />
-上の<a href="fa_GMM_kd.html">Gerlachらの分析法</a>で作ったデータや関数などを使って，Gerlachらの分析を行うミニマムなコードを例示します。 とりあえず手持ちのデータで試してみたい，という方はここだけ試していただいてもよいかと思います (ただし結果の妥当性は保証できませんのでご自身の責任でお願いします)。</li>
-<li><a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a><br />
-Gerlachらが解析したJohnson-300データを読み込み，因子スコアを推定します。</li>
-<li><a href="analyze_IPIP300_2.html">実データ (Johnson-300) の解析2</a><br />
-上で推定した因子スコアに対し，GMMのフィッティングを行い，meaningful clusterを抽出します。</li>
-<li><a href="analyze_IPIP300_3.html">実データ (Johnson-300) の解析3</a><br />
-GMMのために使っていたパッケージMClustの代わりに，Pythonのオープンソース機械学習ライブラリscikit-learnのGMM関数を用います。 このデータに関してはscikit-learnの方が良い結果が得られるようです。</li>
-</ul>
-</div>
-<div class="section level3">
-<h3>発展編</h3>
-<!-- 上記の分析の検討や，他の方法などの紹介をする予定です。 -->
-<!-- また，機械学習や統計モデリングを心理学のデータ解析に使用する方法やその注意点について議論します。 -->
-<ul>
-<li><a href="GMM_skew.html">GMMにおける分布の歪みの効果</a><br />
-分布に明確なクラスター構造がなくても“meaningful cluster”が出てきてしまうことをシミュレーションで検討します。</li>
-<li><a href="binary_analysis.html">二値化解析による非一様性の分析</a><br />
-GMMを使わない素朴な解析により，因子スコアの分布にある 強い非一様性を確認します。未解決問題も議論します。</li>
-</ul>
-<hr />
-</div>
-</div>
-<div class="section level2">
-<h2>本サイトの方針</h2>
-<div class="section level3">
-<h3>まずは自分で作ったデータを使う</h3>
-<p>本チュートリアルに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルの背後に仮定されているデータ生成過程を使って人工的なデータを生成してみて， そのデータを分析してみる，という方法をとっています。</p>
-<p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (例えば <a href="https://www.sciencedirect.com/science/article/pii/S0022249616300025">Katahira (2016)</a>, <a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://www.sciencedirect.com/science/article/pii/S0022249618300610">Toyama et al. (2019)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira et al. (2019)</a>など)。</p>
-</div>
-<div id="r" class="section level3">
-<h3>Rスクリプトの書き方</h3>
-<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRにはあまり慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない人 (私自身そうですが…) にとっては流れがつかみにくくなるので，特に基礎的なところではapply系の関数は極力抑えるようにしています。</p>
-</div>
+<p>2.に関しては，<a href="https://rdrr.io/rforge/fMultivar/man/mvdist-msn.html">Multivariate skew-normal distribution</a> で因子スコアをフィットし，そのモデルから人工データを生成して そのデータにこのページで紹介した二値化解析をしてみましたが， この強い非一様性は再現されませんでした。copulaなども試してみましたが 同様の結果でした。なかなか5次元データの複雑な依存関係を パラメトリックなモデルでとらえることは難しいようです。<br />
+(もちろん，カーネル密度推定のようなノンパラメトリックな方法では とらえられているといえるのですが，それでは結局分布の構造を理解したことにはならないと思います。)</p>
+<p>興味を持たれた方はぜひこの問題に挑戦してみてください。</p>
 </div>
 
 

@@ -353,6 +353,9 @@ div.tocify {
 <li>
   <a href="kd_basics.html">カーネル密度推定</a>
 </li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -370,8 +373,8 @@ div.tocify {
 </div>
 
 
-<p>ここでは，Rのpsychパッケージのfa関数を使った 探索的因子分析の方法を確認します。 同様の方法は多くの心理統計の実践法の書籍に掲載されています。</p>
-<p>ここでは，因子分析を真のモデルからデータを生成し，それに対し因子分析を実行してパラメータや変数の推定をします。</p>
+<p>ここでは，Rのpsychパッケージのfa関数を使った 探索的因子分析の方法を紹介します。 同様の方法は多くの心理統計についての書籍に掲載されています。</p>
+<p>ここでは，因子分析で仮定されるモデルからデータを生成し，それに対し因子分析を実行してパラメータや変数の推定をします。</p>
 <div class="section level2">
 <h2>準備</h2>
 <p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
@@ -380,15 +383,15 @@ install.packages(&quot;GPArotation&quot;)</code></pre>
 </div>
 <div class="section level2">
 <h2>ライブラリ読み込み</h2>
-<p>必要なパッケージを読み込みます。</p>
+<p>因子分析のために必要なライブラリを読み込みます。</p>
 <pre class="r"><code>library(psych)
 library(GPArotation)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
 <p>ここでは 回答者<span class="math inline">\(i\)</span>の項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{ij} = a_{j1} f_{i1} + a_{j2} f_{i2} + d_j u_{ij}\)</span>で与えらえる，というモデルを考えます。</p>
-<p>共通因子は<span class="math inline">\(f_{1}\)</span>と<span class="math inline">\(f_{2}\)</span>の2つで，それぞれの項目<span class="math inline">\(j\)</span>に対する 因子負荷量は<span class="math inline">\(a_{j1}\)</span>, <span class="math inline">\(a_{j2}\)</span>の２つという単純な構造のモデルです。</p>
-<p>以下，ループを回して仮想的な回答者ごとに回答データを生成します。 (生成プロセスが把握しやすいよう，行列は使いません。)</p>
+<p>共通因子は<span class="math inline">\(f_{i1}\)</span>と<span class="math inline">\(f_{i2}\)</span>の2つで，それぞれの項目<span class="math inline">\(j\)</span>に対する 因子負荷量は<span class="math inline">\(a_{j1}\)</span>, <span class="math inline">\(a_{j2}\)</span>の２つという単純な構造のモデルです。 <span class="math inline">\(u_{ij}\)</span>は独自因子 (ノイズ)，<span class="math inline">\(d_j\)</span>は項目ごとの 独自因子の寄与を決めるパラメータです。 <span class="math inline">\(f\)</span>と<span class="math inline">\(u\)</span>は全ての添え字について，互いに独立に平均ゼロ，分散1の標準正規分布に従うと仮定されます。</p>
+<p>以下，ループを回して仮想的な回答者ごとに回答データを生成します。 (生成プロセスが理解しやすいよう，行列は使いません。)</p>
 <pre class="r"><code># 乱数のシードを設定
 set.seed(1)
 
@@ -516,23 +519,11 @@ df_data &lt;- data.frame(y)</code></pre>
 <h2>探索的因子分析の実行</h2>
 <div class="section level3">
 <h3>因子数を決める</h3>
-<!--
-#### ガットマン基準
-観測変数の相関行列の固有値が1.0以上の数を因子数とするのがガットマン基準です。
-
-```r
-cat(eigen(cor(df_data))$values) # 相関行列の固有値の算出
-```
-
-```
-## 4.252251 3.254922 0.5551202 0.4625078 0.3942911 0.336638 0.2315883 0.2052107 0.1668114 0.14066
-```
--->
 <div class="section level4">
 <h4>スクリーテスト</h4>
 <p>スクリーテストでは，観測変数の相関行列の固有値の変化がなだらかになる直前の固有値の数を因子数とします。以下のように固有値を大きい順に並べたものをスクリープロットと呼びます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-6-1.png" width="672" /> このスクリープロットより，第3固有値以降の推移がなだらかになっていることが確認できます。スクリーテストでは，そのようになだらかになる直前までの固有値の数を因子数として選択します。したがって，ここでは 真の因子数 (データを生成した真のモデルの因子の数) である2が選択されます。 また，の固有値が1.0以上の数を因子数とするのがガットマン基準です。ガットマン基準でも因子数は2が選択されます。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-5-1.png" width="672" /> このスクリープロットより，第3固有値以降の推移がなだらかになっていることが確認できます。スクリーテストでは，そのようになだらかになる直前までの固有値の数を因子数として選択します。したがって，ここでは 真の因子数 (データを生成した真のモデルの因子の数) である2が選択されます。 また，固有値が1.0以上の数を因子数とするのがガットマン基準です。ガットマン基準でも因子数は2が選択されます。</p>
 <!--
 #### 平行分析
 
@@ -541,58 +532,7 @@ cat(eigen(cor(df_data))$values) # 相関行列の固有値の算出
 result.fa <- fa.parallel(df_data)
 ```
 
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : A loading greater than abs(1) was detected. Examine the loadings
-## carefully.
-```
-
-```
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
-## = np.obs, : The estimated weights for the factor scores are probably
-## incorrect. Try a different factor extraction method.
-```
-
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : An ultra-Heywood case was detected. Examine the results carefully
-```
-
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : A loading greater than abs(1) was detected. Examine the loadings
-## carefully.
-```
-
-```
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
-## = np.obs, : The estimated weights for the factor scores are probably
-## incorrect. Try a different factor extraction method.
-```
-
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : An ultra-Heywood case was detected. Examine the results carefully
-```
-
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : A loading greater than abs(1) was detected. Examine the loadings
-## carefully.
-```
-
-```
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs
-## = np.obs, : The estimated weights for the factor scores are probably
-## incorrect. Try a different factor extraction method.
-```
-
-```
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate =
-## rotate, : An ultra-Heywood case was detected. Examine the results carefully
-```
-
-<img src="fa_basics_files/figure-html/unnamed-chunk-7-1.png" width="672" />
+<img src="fa_basics_files/figure-html/unnamed-chunk-6-1.png" width="672" />
 
 ```
 ## Parallel analysis suggests that the number of factors =  2  and the number of components =  2
@@ -619,7 +559,7 @@ print(result.fa, sort = TRUE)
 </div>
 <div class="section level3">
 <h3>因子負荷の推定</h3>
-<p>以下では最尤法により因子負荷を推定しています。 また，varimax法で因子負荷の直交回転を行っています。</p>
+<p>以下では最尤法により因子負荷を推定します。 varimax法で因子負荷の直交回転を行います。</p>
 <pre class="r"><code>res_fa &lt;- fa(r = df_data, 
              nfactors = 2,       # 因子数
              rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
@@ -627,7 +567,7 @@ print(result.fa, sort = TRUE)
              )
 
 cor.plot(res_fa, numbers = T)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /> 以下で因子分析の結果を表示します (長くなるのでここでは出力は省略します)。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-7-1.png" width="672" /> 以下で因子分析の結果を表示します (長くなるのでここでは出力は省略します)。</p>
 <pre class="r"><code>print(res_fa)</code></pre>
 </div>
 <div class="section level3">
@@ -636,13 +576,13 @@ cor.plot(res_fa, numbers = T)</code></pre>
 <pre class="r"><code>fsc &lt;- factor.scores(df_data, 
                      f = res_fa, 
                      method = &quot;Harman&quot;)</code></pre>
-<p>推定された因子スコアを，真の因子の値と比較してみましょう。</p>
+<p>推定された因子スコアを，データ生成時に記録しておいた真の因子スコアと比較してみましょう。</p>
 <pre class="r"><code># データフレームにまとめる
 df_fs &lt;- cbind(df_fs, fsc$scores)
 
 # 散布図をプロットする
 plot(df_fs)</code></pre>
-<p><img src="fa_basics_files/figure-html/unnamed-chunk-11-1.png" width="672" /> 因子“ML1”の因子スコアと(真の)因子f1が， 因子“ML2”の因子スコアと因子f2が強く相関し，推定がうまくいっていることがわかります。また，factor 1の方が真の因子負荷量が大きく，ノイズに対するシグナル比が高いため因子スコアの推定精度は高くなっています。</p>
+<p><img src="fa_basics_files/figure-html/unnamed-chunk-10-1.png" width="672" /> 因子“ML1”の因子スコアと(真の)因子f1が， 因子“ML2”の因子スコアと因子f2が強く相関し，推定がうまくいっていることがわかります。また，factor 1の方が真の因子負荷量が大きく，ノイズに対するシグナル比が高いため因子スコアの推定精度は高くなっています。</p>
 </div>
 </div>
 

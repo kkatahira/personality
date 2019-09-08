@@ -353,6 +353,9 @@ div.tocify {
 <li>
   <a href="kd_basics.html">カーネル密度推定</a>
 </li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -370,11 +373,10 @@ div.tocify {
 </div>
 
 
-<p>(2019/09/01 作成中)</p>
 <p>ここでは，MClustパッケージを使った混合正規分布モデル (Gaussian Mixture Model, GMM) のフィッティングの方法を解説します。</p>
 <div class="section level2">
 <h2>準備</h2>
-<p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下のコマンドをコンソールに入力してインスト―ルしてください。</p>
 <pre class="r"><code>install.packages(&quot;mclust&quot;)
 install.packages(&quot;mvtnorm&quot;)</code></pre>
 <div class="section level3">
@@ -386,15 +388,13 @@ library(mclust)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
-<p>ここでは，デモに使うデータを生成します。 データは3つのコンポーネントからなる，2次元の混合正規分布から 生成します。</p>
+<p>ここでは，混合正規分布モデルから人工データを生成します。 データは3つのコンポーネントからなる，2次元の混合正規分布から 生成します。</p>
 <pre class="r"><code># 乱数のシードを設定
 set.seed(1)
 
 # サンプル数
 n.sample &lt;- 1000
 
-# true parameters ---------------------------
-# 3つのコンポーネントからなる正規分布を想定する
 # 各コンポーネントの平均，分散・共分散行列を設定
 true_means &lt;- list(c(0,4),   # コンポーネント1の平均ベクトル
                    c(-3,-1), # コンポーネント2の平均ベクトル
@@ -410,15 +410,16 @@ true_pi &lt;- c(0.4,0.3,0.3)
 # データを生成
 dat &lt;- matrix(0,nrow = n.sample, ncol = 2) 
 for (idx in 1:n.sample) {
-  # 選択するコンポーネントのインデックス
+  # 選択するコンポーネントのインデックスを決定
   idxk &lt;- which.max(rmultinom(1,1,true_pi))
   dat[idx,] &lt;- rmvnorm(n = 1,
                       mean = true_means[[idxk]],
                       sigma = true_sigmas[[idxk]]  )
 }
 
-# データフレームに格納
+# データをデータフレームに格納
 df_data &lt;- data.frame(dat)</code></pre>
+<p>実際は上のような人工データを作るときは， 毎回混合比に従う乱数を発生させるのではなく， サンプル数×混合比の数のサンプルをそれぞれのコンポーネントに 対応する正規乱数から発生させ，まとめるということが 行われます。ここでは混合正規分布モデルに忠実に データを生成しました。</p>
 <div class="section level3">
 <h3>データの確認</h3>
 <p>データが正しくデータフレームに格納されているか，以下で確認します。</p>
@@ -468,96 +469,34 @@ plot(df_data$X1, df_data$X2, pch=&quot;.&quot;,cex = 2, xlab=&quot;X1&quot;, yla
 </div>
 <div id="mclustgmm" class="section level2">
 <h2>MclustによるGMMのフィッティング</h2>
+<p>ここでは，コンポーネント数を3に指定して 関数MclustでGMMのフィッティングを行います。</p>
 <pre class="r"><code>mod1 &lt;- Mclust(df_data, # データ
                G = 3, # コンポーネント数
-               modelNames = &quot;VVI&quot; # モデルの分散・共分散行列の構造
+               modelNames = &quot;VVI&quot; # モデルの分散・共分散行列の構造の指定 (VVIは制約のない通常のGMM)
                )</code></pre>
-<pre><code>## fitting ...
-## 
-  |                                                                       
-  |                                                                 |   0%
-  |                                                                       
-  |================================                                 |  50%
-  |                                                                       
-  |=================================================================| 100%</code></pre>
 <div class="section level3">
 <h3>フィッティングの結果の表示</h3>
 <p>以下で，GMMの結果を表示します。</p>
 <pre class="r"><code>par(pty = &quot;s&quot;)
 plot(mod1, what = &quot;classification&quot;)</code></pre>
 <p><img src="GMM_basics_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>データ生成に用いた真のモデルに対応する3つのコンポーネントが推定され，各サンプルが適切にクラスタリングされていることがわかります。 (各サンプルが所属するクラスターで色分けされています。</p>
+<p>以下で推定されたパラメータの値なども表示されます(長いので省略)。</p>
 <pre class="r"><code>summary(mod1, parameters = TRUE)</code></pre>
-<pre><code>## ---------------------------------------------------- 
-## Gaussian finite mixture model fitted by EM algorithm 
-## ---------------------------------------------------- 
-## 
-## Mclust VVI (diagonal, varying volume and shape) model with 3 components: 
-## 
-##  log-likelihood    n df       BIC       ICL
-##       -3992.456 1000 14 -8081.621 -8094.734
-## 
-## Clustering table:
-##   1   2   3 
-## 316 389 295 
-## 
-## Mixing probabilities:
-##         1         2         3 
-## 0.3156217 0.3900837 0.2942947 
-## 
-## Means:
-##         [,1]      [,2]      [,3]
-## X1  2.965384 0.1003968 -3.037861
-## X2 -1.024736 3.9786605 -1.023301
-## 
-## Variances:
-## [,,1]
-##          X1       X2
-## X1 1.183891 0.000000
-## X2 0.000000 1.079962
-## [,,2]
-##           X1       X2
-## X1 0.9567944 0.000000
-## X2 0.0000000 1.145215
-## [,,3]
-##          X1       X2
-## X1 1.056571 0.000000
-## X2 0.000000 1.095422</code></pre>
-<p>きれいに3つのコンポーネントが推定され，各サンプルが正しくクラスタリングされていることがわかります。</p>
 </div>
 <div class="section level3">
 <h3>コンポーネント数の選択</h3>
-<p>BICにより，コンポーネント数を選択します。</p>
+<p>次にコンポーネント数をBICを用いて データから選択する方法を試します。 (混合正規分布モデルのような非正則なモデルでは BIC導出時になされる近似の前提が成り立たないため，本来は ここでBICを使うのは適切ではないとされます。 しかし，それでもパラメータ数でペナルティを与える方法の 一つと割り切ってか，実際にはよく用いられるようです。)</p>
 <pre class="r"><code>BIC &lt;- mclustBIC(df_data, 
                  G = 1:8, # 候補となるコンポーネント数
                  modelNames = &quot;VVI&quot;
-                 )</code></pre>
-<pre><code>## fitting ...
-## 
-  |                                                                       
-  |                                                                 |   0%
-  |                                                                       
-  |=======                                                          |  11%
-  |                                                                       
-  |==============                                                   |  22%
-  |                                                                       
-  |======================                                           |  33%
-  |                                                                       
-  |=============================                                    |  44%
-  |                                                                       
-  |====================================                             |  56%
-  |                                                                       
-  |===========================================                      |  67%
-  |                                                                       
-  |===================================================              |  78%
-  |                                                                       
-  |==========================================================       |  89%
-  |                                                                       
-  |=================================================================| 100%</code></pre>
-<pre class="r"><code>plot(BIC)</code></pre>
-<p><img src="GMM_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>BICは標準的には小さい方が良いモデルとなる指標なのですが， MClustでは符号を逆にして，大きい方が良いモデルとなるようにしているようです。 真のモデルと同じ，コンポーネント数が3のときにBICの値が最大となり，最適なモデルとして選択されます。</p>
+                 )
+plot(BIC)</code></pre>
+<p><img src="GMM_basics_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>BICは標準的には小さい方が良いモデルとなる指標なのですが， MClustでは符号が逆になり，大きい方が良いモデルとなるようにしているようです。真のモデルと同じ，コンポーネント数が3のときにBICの値が最大となり，最適なモデルとして選択されます。</p>
 <p>BICで選択されたモデルでモデルフィッティングをするときは以下のようにします。</p>
 <pre class="r"><code>mod2 &lt;- Mclust(df_data, x = BIC)</code></pre>
+<p>上は，コンポーネント数を3としてフィッティングしたmod1と 同じ結果が得られます (結果は省略)。</p>
 </div>
 </div>
 
