@@ -460,7 +460,8 @@ b &lt;- t(b)
 ci &lt;- apply(b, MARGIN = 2, function(i){quantile(i, c(.01,.99))})
 lines(ci[1,], mp[,1], &quot;l&quot;, lty = 1, col = &quot;red3&quot;)
 lines(ci[2,], mp[,1], &quot;l&quot;, lty = 1, col = &quot;red3&quot;)</code></pre>
-<p><img src="binary_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /> 一様性を仮定した場合の信頼区間から大きく外れて多い/少ないクラスがあり， 分布に強い非一様性があることがわかります。</p>
+<p><img src="binary_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>一様性を仮定した場合の信頼区間から大きく外れて多い (少ない) クラスがあり， 分布に強い非一様性があることがわかります。</p>
 <p>ここで，以下の二点に気を付ける必要があります。<br />
 - 因子スコアは標準化されているため，それぞれの因子スコアでは平均より上と下はちょうど半分いるはず。したがって，今回観察された偏りは，単に各因子の平均が高い低いということとは関係ない。<br />
 - 因子分析は直交回転を仮定していた。そのため，厳密ではないが因子スコアも相関はほぼゼロになる。したがって，この偏りは2次の相関では説明できない，高次の因子間の依存関係を反映したものと思われる。</p>
