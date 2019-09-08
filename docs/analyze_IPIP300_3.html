@@ -370,34 +370,28 @@ div.tocify {
 </div>
 
 
-<p>ここでは，<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>で Johnson-300データから出した因子スコアに対し， GMM，ヌルモデルとの比較まで行います。 <a href="analyze_IPIP300_2.html">実データ (Johnson-300) の解析2</a> からの変更点は，Gerlach同様に，GMMの推定にPythonのscikit-learnパッケージを用いるところです。 scikit-learnのGMMがMClustと違うのは，初期値にK-means法の 結果を用いることができる点です。MClustは階層クラスター分析の結果を初期値に 使います。今回のように，明確なクラスター構造がないデータに GMMを適用する場合は，クラスターの平均間の距離が大きくなるよう クラスターを割り当てるK-means法の結果を初期値に使った方が 尤度を高くする解に到達しやすいようです。 RでGMMのフィッティングを実行するスクリプトを書くことは簡単ですし，他にもGMMの Rのパッケージは存在するのですが，scikit-learnはそれより高速で， データサイズが大きい場合はその計算時間の差はクリティカルになってきます。</p>
+<p>ここでは，<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>で Johnson-300データから出した因子スコアに対し， GMM，ヌルモデルとの比較まで行います。 <a href="analyze_IPIP300_2.html">実データ (Johnson-300) の解析2</a> からの変更点は，Gerlachrらと同様に，GMMの推定にPythonのscikit-learnパッケージを用いるところです。 scikit-learnのGMMがMClustと違うのは，初期値にK-means法の 結果を用いることができる点です。MClustは階層クラスター分析の結果を初期値に使います。今回のように，明確なクラスター構造がないデータに GMMを適用する場合は，クラスター間の距離が大きくなるよう クラスターを割り当てるK-means法の結果を初期値に使った方が 尤度を高くする解に到達しやすいようです。 RでGMMのフィッティングを実行するスクリプトを書くことは簡単ですし，他にもGMMのRのパッケージは存在するのですが，scikit-learnはそれより高速です。データサイズが大きい場合はその計算時間の差はクリティカルになってきます。</p>
 <div class="section level2">
 <h2>準備</h2>
-<p>以下の記事などを参考に，RからPythonを使う準備をします。 - <span class="citation">[@yamano357さんのブログ:reticulateパッケージでRからPythonを使う]</span>(<a href="https://qiita.com/yamano357/items/9319d4b073d82a261ed8" class="uri">https://qiita.com/yamano357/items/9319d4b073d82a261ed8</a>) 具体的には，scikit-learnが入っているPythonのディストリビューション， <a href="https://www.anaconda.com/">Anaconda</a>をインストールすると良いと思います。</p>
-<p>それから，以下のコマンドをコンソールに入力してreticulateパッケージを インスト―ルしてください。</p>
+<p>以下の記事などを参考に，RからPythonを使う準備をします。<br />
+-　<span class="citation">[@yamano357さんのブログ:reticulateパッケージでRからPythonを使う]</span>(<a href="https://qiita.com/yamano357/items/9319d4b073d82a261ed8" class="uri">https://qiita.com/yamano357/items/9319d4b073d82a261ed8</a>)<br />
+Pythonがインストールされていない場合は，scikit-learnが入っているPythonのディストリビューション， <a href="https://www.anaconda.com/">Anaconda</a>をインストールすると良いと思います。</p>
+<p>それから，以下のコマンドをコンソールに入力してreticulateパッケージをインスト―ルしてください。</p>
 <pre class="r"><code>install.packages(&quot;reticulate&quot;)</code></pre>
+</div>
+<div class="section level2">
+<h2>パッケージや関数の読み込み</h2>
 <p>必要なパッケージを読み込みます。</p>
 <pre class="r"><code>library(reticulate)</code></pre>
 <p><a href="fa_GMM_kd.html">こちら</a>のページで解説した クラスター評価のための関数を読み出します。</p>
 <pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
-<pre><code>## Registered S3 methods overwritten by &#39;ggplot2&#39;:
-##   method         from 
-##   [.quosures     rlang
-##   c.quosures     rlang
-##   print.quosures rlang</code></pre>
-<pre><code>## -- Attaching packages ---------------------------------------- tidyverse 1.2.1 --</code></pre>
-<pre><code>## √ ggplot2 3.1.1     √ purrr   0.3.2
-## √ tibble  2.1.3     √ dplyr   0.8.1
-## √ tidyr   0.8.3     √ stringr 1.4.0
-## √ readr   1.3.1     √ forcats 0.4.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------- tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
+<p>このファイルは<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">こちら</a>からもダウンロードできます。</p>
 </div>
 <div class="section level2">
 <h2>データの読み込み</h2>
 <p><a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>で作成した 因子スコアデータを読み出します。パスはご自身のものに合わせてください。</p>
 <pre class="r"><code>df_sc &lt;- read.csv(&quot;C:/data/personality/fs_IPIP300.csv&quot;, header = TRUE)</code></pre>
+<p>このcsvファイルは<a href="https://kkatahira.github.io/personality/fs_IPIP300.csv">こちら</a>からもダウンロードできます。</p>
 </div>
 <div id="gmm" class="section level2">
 <h2>GMMのフィッティング</h2>
@@ -417,17 +411,22 @@ for (idxk in seq_along(klist)){
   K &lt;- klist[idxk]
   likelihood &lt;- -Inf
   
-  gmm &lt;- sk_gmm(as.integer(K),
+  # GMMを定義
+  # scikit-learnに渡すときは整数型にする必要がある
+  gmm &lt;- sk_gmm(as.integer(K), 
                 n_init = 1L,
                 max_iter = 100L, 
                 init_params = &quot;kmeans&quot;) 
   
   for (idxrun in 1:n.rep) {
     
+    # フィッティング
     gmm$fit(df_sc)
     
+    # 対数尤度
     ll &lt;- gmm$lower_bound_
     
+    # 対数尤度がこれまでのものよりよかった場合，結果を記録
     if (ll &gt;likelihood) {
       likelihood &lt;- ll
       c.center_list[[idxk]] &lt;- data.frame(gmm$means_)
@@ -440,20 +439,20 @@ for (idxk in seq_along(klist)){
       &quot;itr:&quot;, gmm$n_iter_, &quot;\n&quot;)
 }</code></pre>
 <pre><code>## scikit GMM  K=  1  ll=  -6.99302 bic= 2033640 itr: 2 
-## scikit GMM  K=  2  ll=  -6.936202 bic= 2017208 itr: 18 
-## scikit GMM  K=  3  ll=  -6.926241 bic= 2014553 itr: 9 
-## scikit GMM  K=  4  ll=  -6.92224 bic= 2013661 itr: 9 
-## scikit GMM  K=  5  ll=  -6.917915 bic= 2012596 itr: 8 
-## scikit GMM  K=  6  ll=  -6.912316 bic= 2011232 itr: 9 
-## scikit GMM  K=  7  ll=  -6.911151 bic= 2011157 itr: 9 
-## scikit GMM  K=  8  ll=  -6.910133 bic= 2011089 itr: 9 
-## scikit GMM  K=  9  ll=  -6.907291 bic= 2010521 itr: 8 
-## scikit GMM  K=  10  ll=  -6.904762 bic= 2010041 itr: 8 
-## scikit GMM  K=  11  ll=  -6.904092 bic= 2010104 itr: 8 
-## scikit GMM  K=  12  ll=  -6.903366 bic= 2010150 itr: 9 
-## scikit GMM  K=  13  ll=  -6.902194 bic= 2010030 itr: 9 
-## scikit GMM  K=  14  ll=  -6.90136 bic= 2010044 itr: 9 
-## scikit GMM  K=  15  ll=  -6.900203 bic= 2009971 itr: 9</code></pre>
+## scikit GMM  K=  2  ll=  -6.936132 bic= 2017183 itr: 16 
+## scikit GMM  K=  3  ll=  -6.926286 bic= 2014550 itr: 9 
+## scikit GMM  K=  4  ll=  -6.922153 bic= 2013637 itr: 10 
+## scikit GMM  K=  5  ll=  -6.917914 bic= 2012595 itr: 8 
+## scikit GMM  K=  6  ll=  -6.912232 bic= 2011216 itr: 9 
+## scikit GMM  K=  7  ll=  -6.912157 bic= 2011447 itr: 9 
+## scikit GMM  K=  8  ll=  -6.909569 bic= 2010937 itr: 9 
+## scikit GMM  K=  9  ll=  -6.907062 bic= 2010444 itr: 8 
+## scikit GMM  K=  10  ll=  -6.905558 bic= 2010253 itr: 8 
+## scikit GMM  K=  11  ll=  -6.904436 bic= 2010202 itr: 8 
+## scikit GMM  K=  12  ll=  -6.903364 bic= 2010148 itr: 9 
+## scikit GMM  K=  13  ll=  -6.902402 bic= 2010116 itr: 9 
+## scikit GMM  K=  14  ll=  -6.901097 bic= 2009982 itr: 9 
+## scikit GMM  K=  15  ll=  -6.900168 bic= 2009960 itr: 9</code></pre>
 <pre class="r"><code>plot(klist, biclog, type = &quot;l&quot;, 
      xlab = &quot;Number of components&quot;, ylab = &quot;BIC&quot;)</code></pre>
 <p><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
@@ -498,7 +497,7 @@ component.centers &lt;- c.center_list[[idxk]]</code></pre>
                         p.threshold = 0.01, 
                         enrichment.threshold = 1.25
                         )</code></pre>
-<p><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-1.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-2.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-3.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-4.png" width="672" /> 4つのmeaningful clusterが同定されました。この4つがGerlachらが同定した パーソナリティの4つの“タイプ”です。 <!-- Gerlachらの結果に対応付けられるでしょうか。 --> <!-- ると，順に"Role model", "Reserved", "Role model", "Average",  --> <!-- "Self-centered"となるでしょうか。 --></p>
+<p><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-1.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-2.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-3.png" width="672" /><img src="analyze_IPIP300_3_files/figure-html/unnamed-chunk-8-4.png" width="672" /> 4つのmeaningful clusterが同定されました。この4つがGerlachらが同定した パーソナリティの4つの“タイプ”に対応すると考えられます。 <!-- Gerlachらの結果に対応付けられるでしょうか。 --> GerlachらのFig.2と見比べると，順に“Reserved”, “Self-centered”, “Role model”, “Average”に対応します。 “Average”はパターンが やや異なっていますが，このタイプは 不安定であり，ピークは明確ではないため初期値などによって 変わるようです。</p>
 </div>
 
 
