@@ -584,7 +584,8 @@ image(eval.points.x,
       zlim = c(0,1),
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
-<p><img src="kd_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /> 少しきれいになりました。</p>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>少しきれいになりました。</p>
 <p>さらに，Gerlachらはオリジナルなデータの密度とヌルモデルの密度の平均値の比を’enrichment’と定義し， クラスターの中心が<span class="math inline">\(p &lt; 0.01\)</span> という基準に加え，enrichment <span class="math inline">\(&gt;\)</span> 1.25になるクラスターをmeaningfulな クラスターとしています。このenrichmentに関する制約も加えてみます。</p>
 <pre class="r"><code>par(pty=&quot;s&quot;)
 image(eval.points.x,
