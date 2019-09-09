@@ -388,7 +388,7 @@ library(mvtnorm)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
-<p>ここでは1000人は2次元の標準正規分布 (平均は(0,0), 分散・共分散行列は単位行列) に従い， 100人は平均は(1,1) 分散・共分散行列は対角成分が0.05，非対角成分は0の正規分布に従うとします。 座標(1,1)付近の密度が特に高くなっているというデータです。</p>
+<p>ここでは1000人は2次元の標準正規分布 (平均は(0,0), 分散・共分散行列は単位行列) に従い， 100人は平均は(1,1)， 分散・共分散行列は対角成分が0.05，非対角成分は0の正規分布に従うとします。 座標(1,1)付近の密度が特に高くなっているというデータです。</p>
 <pre class="r"><code># 乱数のシードを決定
 set.seed(1)
 
@@ -511,7 +511,8 @@ image(density.shuffle,
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
       main = &quot;null model&quot;, zlim = c(0,zmax), 
       col = viridis::viridis(20))</code></pre>
-<p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /> 左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
 </div>
 <div class="section level2">
 <h2>ヌルモデルとの比較によるクラスターの評価</h2>
