@@ -1,0 +1,125 @@
+---
+title: "Gerlachの分析法 (ミニマム版)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache = TRUE)
+```
+
+ここでは，[Gerlachらの分析法](fa_GMM_kd.html)で紹介した関数を使ってGerlachらの分析を行う方法を例示します。
+
+## 準備
+
+本ページで使用するパッケージがインストールされていない場合は，以下の
+コマンドをコンソールに入力してインスト―ルしてください。
+```{r eval=FALSE}
+install.packages("psych")
+install.packages("GPArotation")
+install.packages("ks")
+install.packages("mclust")
+install.packages("tidyverse")
+```
+
+必要なパッケージを読み込みます。
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(psych)
+library(GPArotation)
+library(ks)
+library(mclust)
+library(tidyverse)
+```
+
+クラスター評価のための関数を読み出します。
+```{r}
+source("functions_component_evaluation.R")
+```
+このRスクリプトは[こちら](https://kkatahira.github.io/personality/functions_component_evaluation.R)からダウンロードできます。
+
+## データの読み込み
+[こちら](fa_GMM_kd.html)で作成したデータ[data_fa_GMM1.csv](https://kkatahira.github.io/personality/data_fa_GMM1.csv)をデータフレームdf_dataに読み出します。
+```{r}
+df_data <- read.csv("./data_fa_GMM1.csv", header = TRUE)
+head(df_data,5)
+```
+
+
+## 探索的因子分析の実行
+
+### 因子数を決める
+
+スクリープロットで因子数を決めます。
+
+```{r}
+VSS.scree(df_data)
+```
+減少がなだらかになる直前までの固有値の数2を因子数として選択します。
+
+
+### 因子負荷の推定
+
+最尤法により因子負荷を推定します。
+
+```{r}
+res_fa <- fa(r = df_data, 
+             nfactors = 2,       # 因子数
+             rotate = "varimax", # 回転法はvarimaxを指定
+             fm = "ml"           # 最尤法を指定
+             )
+
+cor.plot(res_fa, numbers = T)
+```
+
+### 因子スコアの推定
+
+推定した因子分析モデルから回答者ごとの因子スコア ($f$) を推定します。
+
+```{r}
+fsc <- factor.scores(df_data, f = res_fa, 
+                     method = "Harman")
+
+df_sc <- data.frame(fsc$scores)
+names(df_sc) <- c("factor.1","factor.2")
+```
+
+## GMMのフィッティング
+
+BICにより，コンポーネント数を選択します。
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+BIC <- mclustBIC(df_sc, 
+                 G = 1:15, # 候補となるコンポーネント数
+                 modelNames = "VVI"
+                 )
+plot(BIC)
+```
+
+コンポーネント数として，BICの値を最大とする (MClustの仕様ではBICが大きい方が良いモデル) ，
+3が選択されます。
+
+BICで選択されたモデルの各コンポーネントの平均を求めます。
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+mod.GMM <- Mclust(df_sc, x = BIC)
+
+component.centers <- t(mod.GMM$parameters$mean)
+```
+## ヌルモデルとの比較による評価
+
+各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度を比較し，meaningful clusterであるか否か判定します。
+
+```{r}
+res_ec <- eval_component(df_sc, component.centers, 
+                         n.shuffle = 100) 
+print(res_ec)
+```
+
+meaningful clusterをプロットします。
+
+```{r}
+plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
+                        as.matrix(component.centers), 
+                        p.threshold = 0.01, 
+                        enrichment.threshold = 1.25
+                        )
+```
