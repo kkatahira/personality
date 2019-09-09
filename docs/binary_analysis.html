@@ -375,7 +375,8 @@ div.tocify {
 </div>
 
 
-<p>ここでは，GMMなどを用いずに大雑把に分布の非一様性 (偏り具合) を とらえるためにそれぞれの因子スコアの符号でクラス (象限) を分類し 数の分布を見るという分析法を試してみます ( この分析法は我々の<a href="https://psyarxiv.com/wua9j/">コメント論文</a>に対する<a href="https://psyarxiv.com/rvpfs/">リプライ論文</a>で用いられていますが，我々がコメント論文の投稿前に著者に送った原稿の中で提案していたものです)。</p>
+<p>ここでは，GMMなどを用いずに大雑把に分布の非一様性 (偏り具合) を とらえるための分析法を紹介します (この分析法は我々の<a href="https://psyarxiv.com/wua9j/">コメント論文</a>に対する<a href="https://psyarxiv.com/rvpfs/">リプライ論文</a>で用いられていますが，もとは我々がコメント論文の投稿前に著者に送った原稿の中で試していたものです)。</p>
+<p>その分析法とは，それぞれの因子スコアの符号でクラス (象限) を分類し， それぞれのクラスに入る数の偏りを調べるというものです。</p>
 <div class="section level2">
 <h2>準備</h2>
 <div class="section level3">
@@ -408,25 +409,7 @@ for (idx in 1:N){
 
 # 二値表現 (0: &lt; 0, 1: &gt; 0) でクラスのラベルを作る (&quot;NEOAC&quot;の順)
 lb &lt;- lapply(1:n.class, 
-             function(x) paste((as.integer(intToBits(x-1))[1:5]), collapse=&quot;&quot;))
-
-# 各因子ごとの0,1とその回答者の数を表すデータフレームを用意
-df.binary &lt;- data.frame(matrix(0, nrow = 2^5, ncol = 6))
-names(df.binary) &lt;- c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&quot;C&quot;,&quot;Freq&quot;)
-for (idxr in 1:n.class){
-  for (idxc in 1:5) {
-    df.binary[idxr,idxc] &lt;- 
-      as.integer(substr(lb[[idxr]],idxc,idxc))
-  }
-  df.binary[idxr,6] &lt;- count.class[idxr]
-}
-
-head(df.binary)</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["N"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["E"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["O"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["A"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["C"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Freq"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"3815","_rn_":"1"},{"1":"1","2":"0","3":"0","4":"0","5":"0","6":"4175","_rn_":"2"},{"1":"0","2":"1","3":"0","4":"0","5":"0","6":"4920","_rn_":"3"},{"1":"1","2":"1","3":"0","4":"0","5":"0","6":"4859","_rn_":"4"},{"1":"0","2":"0","3":"1","4":"0","5":"0","6":"4142","_rn_":"5"},{"1":"1","2":"0","3":"1","4":"0","5":"0","6":"4000","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
+             function(x) paste((as.integer(intToBits(x-1))[1:5]), collapse=&quot;&quot;))</code></pre>
 </div>
 <div class="section level2">
 <h2>それぞれのクラスの数をプロット</h2>
@@ -470,11 +453,11 @@ lines(ci[2,], mp[,1], &quot;l&quot;, lty = 1, col = &quot;red3&quot;)</code></pr
 <h2>未解決問題</h2>
 <p>以下の二点は未解決問題です。</p>
 <ol style="list-style-type: decimal">
-<li><p>この非一様性がどのようなメカニズムで出てくるのか (本当に人類のパーソナリティの偏りを反映したものか，回答スタイルなどの個人差などによるアーティファクトなのか，用いられた心理尺度の性質なのか，あるいは調査に回答した回答者の偏りなのか)</p></li>
+<li><p>この非一様性がどのようなメカニズムで出てくるのか。 (本当に人類のパーソナリティの偏りを反映したものか，回答スタイルなどの個人差などによるアーティファクトなのか，用いられた心理尺度の性質なのか，あるいは調査に回答した回答者の偏りなのか。)</p></li>
 <li><p>この偏りを説明する適切な統計モデルはあるのか。</p></li>
 </ol>
 <p>2.に関しては，<a href="https://rdrr.io/rforge/fMultivar/man/mvdist-msn.html">Multivariate skew-normal distribution</a> で因子スコアをフィットし，そのモデルから人工データを生成して そのデータにここで紹介した二値化解析をしてみましたが， この強い非一様性は再現されませんでした。copulaなども試してみましたが 同様の結果でした。なかなか5次元データの複雑な依存関係を パラメトリックなモデルでとらえることは難しいようです。<br />
-(もちろん，カーネル密度推定のようなノンパラメトリックな方法では ある意味ではとらえられているといえるのですが，それでは分布の構造を理解したことにはならないと思います。)</p>
+(もちろん，カーネル密度推定のようなノンパラメトリックな方法では ある意味ではとらえられているといえるのですが，それだけでは分布の構造を理解したことにはならないと思います。)</p>
 <p>興味を持たれた方はぜひこの問題に挑戦してみてください。</p>
 </div>
 
