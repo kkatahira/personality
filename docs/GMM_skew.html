@@ -353,6 +353,9 @@ div.tocify {
 <li>
   <a href="kd_basics.html">カーネル密度推定</a>
 </li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -370,7 +373,7 @@ div.tocify {
 </div>
 
 
-<p>GMMは，データに明確なクラスター構造がない場合でも， 複数の正規分布を重ね合わせることでパラメトリックな分布では表現できない 複雑な分布も表現できるという性質があります。 逆に，分布が正規分布ではないと，明確なクラスター構造のない分布の場合も 無理やり複数の正規分布を重ね合わせて表現できてしまうため，一つ一つの コンポーネントの解釈をする際は注意が必要です (<a href="https://pdfs.semanticscholar.org/1236/21e16ec4603c7323b093d641ff1bf0f65713.pdf">Bauer &amp; Curran, 2004</a>) 。 ここでは，歪みのある分布へGMMをフィットすると 複数のコンポーネントが使われるということを確認します。 また，その性質がサンプルサイズにどのように依存するか調べてみます。</p>
+<p>GMMは，データに明確なクラスター構造がない場合でも， 複数の正規分布を重ね合わせることで基本的なパラメトリックな分布では表現できない 複雑な分布も表現できるという性質があります。 逆に，分布が正規分布ではないと，明確なクラスター構造のない分布の場合も 無理やり複数の正規分布を重ね合わせて表現できてしまうため，一つ一つの コンポーネントの解釈をする際は注意が必要です (<a href="https://pdfs.semanticscholar.org/1236/21e16ec4603c7323b093d641ff1bf0f65713.pdf">Bauer &amp; Curran, 2004</a>) 。 ここでは，歪みのある分布へGMMをフィットすると 複数のコンポーネントが使われるということを確認します。 また，その性質がサンプルサイズにどのように依存するか調べてみます。</p>
 <div class="section level2">
 <h2>準備</h2>
 <p>本ページで使用するパッケージがインストールされていない場合は，以下の コマンドをコンソールに入力してインスト―ルしてください。</p>
@@ -378,18 +381,15 @@ div.tocify {
 install.packages(&quot;mvtnorm&quot;)
 install.packages(&quot;sn&quot;) # skew-normal distribution distributionを扱うためのパッケージ
 install.packages(&quot;tidyverse&quot;) </code></pre>
-<div class="section level3">
-<h3>必要なパッケージの読み込み</h3>
 <p>以下で必要なパッケージを読み込みます。</p>
-<pre class="r"><code>library(mvtnorm)
-library(mclust)
+<pre class="r"><code>library(mclust)
+library(mvtnorm)
 library(sn)
 library(tidyverse) # ggplot用</code></pre>
 </div>
-</div>
 <div class="section level2">
 <h2>データの生成</h2>
-<p>デモに使うデータを生成します。 ここではデータは2次元のデータであり，それぞれ独立に 同一のskew-normal distributionから生成します。</p>
+<p>デモに使うデータを生成します。 ここではデータは2次元のデータであり，それぞれ独立に 同一のskew normal distributionから生成します。</p>
 <pre class="r"><code>set.seed(1)
 n.sample &lt;- 1000
 
@@ -397,6 +397,7 @@ X1 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
 X2 &lt;- rsn(n = n.sample, dp = c(-1, 1, 4))
 
 df_data &lt;- data.frame(cbind(X1,X2))</code></pre>
+<p>“dp = c(-1, 1, 4)”は skew normal distributionのパラメータで，それぞれ <span class="math inline">\(\xi\)</span> (location), <span class="math inline">\(\omega\)</span> (scale), <span class="math inline">\(\alpha\)</span> (shape) の値です (参考: <a href="https://en.wikipedia.org/wiki/Skew_normal_distribution">Wikipedia</a>)。</p>
 <div class="section level3">
 <h3>データをプロットする</h3>
 <p>生成したデータを以下でプロットしてみます。</p>
@@ -480,9 +481,9 @@ for (idxn in seq_along(n.sample.array)){
 
 print(g)</code></pre>
 <p><img src="GMM_skew_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<p>サンプル数が100を超えたあたりから使われるコンポーネント数が 増えていく様子がわかります。 サンプル数が増えるほど，データの分布が歪んでいたときにその影響を受けるということです。 Gerlachらは一度に15万人程度 (Johnson-300 data setの場合) の大規模なデータを使っていたため，分布の歪みにより GMMのコンポーネント数が多め (17程度) に選択されていた可能性が考えられます。</p>
+<p>サンプル数が100を超えたあたりから使われるコンポーネント数が 増えていく様子がわかります。 サンプル数が増えるほど，データの分布が歪んでいたときにその影響を受けるということです。 Gerlachらは一度に15万人程度 (Johnson-300 data setの場合) の大規模なデータを使っていたため，分布の歪みにより GMMのコンポーネント数が多め (13程度) に選択されていた可能性が考えられます。</p>
 <p>ただし，このページで作った人工データでは，Gerlachらがクラスターの有意性を判定するのに行った<a href="kd_basics.html">カーネル密度推定を用いたヌルモデルの比較</a>ではどのコンポーネントも“meaningful cluster”とは判定されません。 ここでのヌルモデルは，与えられたデータと周辺分布は同じだが，変数間の依存関係がない独立な分布，というものでした。 このページで作った人工データは次元ごとに独立な分布から生成していたので，ヌルモデルを作ったところで元のデータの分布と形状は大きく変わらず，コンポ―ネントの中心を見ても密度が有意に変わる領域は出てきません。</p>
-<p>では，どういうデータであれば，クラスター構造のない単峰な分布であっても“meaningful cluster”と判定されるということがあるでしょうか。 それはGerlachらの分析仮定でも起こりうることでしょうか。 それらを議論したのがこちらの<a href="https://psyarxiv.com/wua9j/">コメント論文</a>です。</p>
+<p>では，どういうデータであれば，クラスター構造のない単峰な分布であっても“meaningful cluster”と判定されるということがあるでしょうか。 それはGerlachらの分析仮定でも起こりうることでしょうか。 それらを議論したのがこちらの<a href="https://psyarxiv.com/wua9j/">コメント論文</a>です。 この論文では，上記のようなデータを45度回転させると，“meaningful cluster”と判定されるコンポーネントが現れる，という例を示しています。</p>
 </div>
 
 
