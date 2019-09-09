@@ -353,6 +353,9 @@ div.tocify {
 <li>
   <a href="kd_basics.html">カーネル密度推定</a>
 </li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -387,7 +390,7 @@ library(mclust)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
-<p>要素技術編と同様，回答者<span class="math inline">\(i\)</span>の項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{ij} = a_{j1} f_{i1} + a_{j2} f_{i2} + d_j u_{ij}\)</span>で与えらえるモデルを考えます。</p>
+<p>要素技術編と同様，項目<span class="math inline">\(j\)</span>に対する回答が <span class="math inline">\(y_{j} = a_{j1} f_{1} + a_{j2} f_{2} + \epsilon_{j}\)</span>で与えられるとするモデルを考えます。</p>
 <p>ただしここでは，<span class="math inline">\(f_{1}\)</span>，<span class="math inline">\(f_{2}\)</span>は2次元の混合正規分布から生成します。つまり，標準的な因子分析の仮定と異なり，因子にクラスター構造があるものとします。</p>
 <pre class="r"><code># 乱数のシードを設定
 set.seed(1)
@@ -396,14 +399,14 @@ set.seed(1)
 n.sample &lt;- 1000
 
 n &lt;- 100 # 回答者数
-m &lt;- 10  # 項目数
+p &lt;- 10  # 項目数
 
 # 因子負荷
 a1 &lt;- c(2,2,2,2,2,0,0,0,0,0) + rnorm(10,mean=0,sd=0.5) # factor 1 項目1-5に大きい値を持つ
 a2 &lt;- c(0,0,0,0,0,1,1,1,1,1) + rnorm(10,mean=0,sd=0.5) # factor 2 項目6-10に大きい値を持つ
 
 # 仮想回答データを入れる変数のメモリを確保
-y &lt;- matrix(nrow = n.sample, ncol = m)
+y &lt;- matrix(nrow = n.sample, ncol = p)
 
 # 真の因子の値を入れるデータフレーム
 df_fs &lt;- data.frame(matrix(nrow = n, ncol = 2))
@@ -422,7 +425,6 @@ true_sigmas &lt;- list(diag(2), # コンポーネント1の分散・共分散行
 # 混合比を設定
 true_pi &lt;- c(0.4,0.3,0.3)
 
-
 # データを生成
 dat &lt;- matrix(0,nrow = n.sample, ncol = 2) 
 for (idx in 1:n.sample) {
@@ -434,7 +436,7 @@ for (idx in 1:n.sample) {
   
   # 回答者idxの仮想回答データ
   y[idx,] &lt;- a1 * dat[idx,1] + a2 * dat[idx,2] + 
-    rnorm(m, mean = 0, sd = 2) # 独自因子
+    rnorm(p, mean = 0, sd = 2) # 独自因子
   
   # 真の因子スコアを記録
   colnames(df_fs) &lt;- c(&quot;f1&quot;, &quot;f2&quot;)
@@ -491,8 +493,8 @@ names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
 plot(df_sc, pch=&quot;.&quot;,cex = 2)</code></pre>
 <p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>データ生成に使った因子の値がよく再現されています。</p>
-<p>因子分析のモデルは因子は正規分布と仮定されているのですが， この仮定が満たされなくても真の因子スコアが歪みなく， 構造が再現されるということは重要なことだと思います。 そうでないと，同様にして求めた因子スコアを扱った Gerlachらの結果が疑わしいものになってしまうからです。</p>
-<p>しかし，ここでのデータは2因子でかつ比較的単純な ものであり，Gerlachらの解析で推定された因子スコアの 妥当性はどの程度のものか，ということはさらなる検討が 必要だと思います。ぜひご興味のある方は検討してみてください。</p>
+<p>因子分析のモデルは因子は正規分布と仮定されているのですが， この仮定が満たされなくても真の因子スコアが歪みなく， 構造が再現されるということは重要だと思います。 そうでないと，同様にして求めた因子スコアを扱った Gerlachらの結果は疑わしいものになってしまうためです。</p>
+<p>しかし，ここでのデータは2因子でかつ比較的単純な ものであり，Gerlachらの解析で推定された因子スコアの 妥当性はどの程度のものか，ということはさらなる検討が 必要だと思います。</p>
 </div>
 </div>
 <div id="gmm" class="section level2">
@@ -515,7 +517,7 @@ plot(mod.GMM, what = &quot;classification&quot;)</code></pre>
 </div>
 <div class="section level2">
 <h2>各コンポーネントの平均をプロットする。</h2>
-<p>ここでは，コンポーネントの平均ベクトルを棒グラフで表します。 ここでの例のように，2次元データの場合は上のように2次元分布 状にコンポーネントの中心をプロットできるので，わざわざ 棒グラフにする意味はあまりないのですが，Gerlachらのように 因子の数が5つ，すなわち5次元データの場合は このようなグラフでとらえるしかありません。</p>
+<p>ここでは，コンポーネントの平均ベクトルを棒グラフで表します。 ここの例のように，2次元データの場合は上のように2次元分布 状にコンポーネントの中心をプロットできるので，わざわざ 棒グラフにする意味はあまりありません。しかし，Gerlachらのように 因子の数が5つ，すなわち5次元データの場合は このようなグラフでとらえるしかありません。</p>
 <pre class="r"><code>collist &lt;- list(&quot;blue&quot;,&quot;red&quot;,&quot;green&quot;, &quot;purple&quot;, &quot;orange&quot;)
 n.component &lt;- mod.GMM$G
 par(mfcol =  c(1,n.component))
@@ -530,7 +532,7 @@ for (idx in 1:n.component) {
 </div>
 <div class="section level2">
 <h2>ヌルモデルとの比較による評価</h2>
-<p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度をカーネル密度推定により推定します。要素技術編と異なり，全体の座標点ではなく，GMMのコンポーネントの平均のみの座標でこれを行います。</p>
+<p>各コンポーネントの平均の座標の密度と，その座標におけるヌルモデルの密度をカーネル密度推定により推定します。要素技術編と異なり，全体の座標点ではなく，GMMのコンポーネントの平均の座標点でこれを行います。</p>
 <pre class="r"><code># 各コンポーネントの平均の座標
 # 列はコンポーネントのID, 行は因子に対応。
 component.centers &lt;- t(mod.GMM$parameters$mean) 
@@ -594,7 +596,7 @@ for (idx in 1:n.component) {
 <div class="section level2">
 <h2>ヌルモデルとの比較を関数化する</h2>
 <p>ここまででGerlachらが提案している一連の解析を行いました。 これで実際のデータも解析できるのですが，ヌルモデルとの 比較のところはスクリプトの行数が多く，毎回これを 打ち込むのは大変ですし，スクリプトも煩雑になります。</p>
-<p>そこで，今後のためにこの一連の処理は関数にしておくのがよいでしょう。 入力は，因子スコア (回答者×因子) と，各コンポーネントの平均 (コンポーネント×因子)だけで十分です。この二つと， シャッフル回数などのパラメータを引数とし， 各コンポーネントのp値やenrichmentを返す関数eval_componentを作っておきます。 関数はRコード<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。こちらからダウンロードし，ワーキングディレクトリに置いて</p>
+<p>そこで，今後のためにこの一連の処理は関数にしておきます。 入力は，因子スコア (回答者×因子) と，各コンポーネントの平均 (コンポーネント×因子)だけで十分です。この二つと， シャッフル回数などのパラメータを引数とし， 各コンポーネントのp値やenrichmentを返す関数eval_componentを作っておきます。 関数はRコード<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。こちらからダウンロードし，ワーキングディレクトリに置いて</p>
 <pre class="r"><code>source(&quot;functions_component_evaluation.R&quot;)</code></pre>
 <p>で読み込んでください。</p>
 <p>関数eval_componentを試してみます。</p>
@@ -615,47 +617,10 @@ for (idx in 1:n.component) {
 ## 
 ## $enrichment
 ## [1] 2.474595 1.427298 1.706529</code></pre>
-<p>また，この関数の出力は，データフレームにすると便利です。 例えば，meaningful clusterと判定されたコンポーネントの結果だけ 抜き出したり，enrichmentの大きい順に並べたりすることができます。</p>
+<p>この関数の出力は，データフレームにすると便利です。 そうすることで，例えば，meaningful clusterと判定されたコンポーネントの結果だけ 抜き出したり，enrichmentの大きい順に並べたりすることができます。</p>
 <pre class="r"><code>df_c_eval &lt;- data.frame(c.idx = 1:n.component, #コンポーネントのID
                          res_ec) 
 head(df_c_eval,5)</code></pre>
-<div class="kable-table">
-<table>
-<thead>
-<tr class="header">
-<th align="right">c.idx</th>
-<th align="right">d.original</th>
-<th align="right">d.null</th>
-<th align="right">p.value</th>
-<th align="right">enrichment</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">0.3083011</td>
-<td align="right">0.1245865</td>
-<td align="right">0</td>
-<td align="right">2.474595</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">0.1950971</td>
-<td align="right">0.1366899</td>
-<td align="right">0</td>
-<td align="right">1.427298</td>
-</tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">0.2258706</td>
-<td align="right">0.1323567</td>
-<td align="right">0</td>
-<td align="right">1.706529</td>
-</tr>
-</tbody>
-</table>
-</div>
-<pre class="r"><code>head(df_c_eval,5)</code></pre>
 <div class="kable-table">
 <table>
 <thead>
@@ -732,7 +697,7 @@ df_c_eval</code></pre>
 </tbody>
 </table>
 </div>
-<p>enrichment &gt; 1.25, p.value &lt; 0.01という基準を満たす コンポーネントだけ抜き出します。(今はどのコンポーネントもこの基準を満たすので変化しません)</p>
+<p>続いて，enrichment &gt; 1.25, p.value &lt; 0.01という基準を満たす コンポーネントだけ抜き出します。(今はどのコンポーネントもこの基準を満たすので変化しません)</p>
 <pre class="r"><code>df_c_eval &lt;- df_c_eval %&gt;% filter(enrichment &gt; 1.25, p.value &lt; 0.01) </code></pre>
 <p>この処理をもとに，meaningful clusterだけ平均をプロットしてみます。</p>
 <pre class="r"><code># コンポーネントの中心の座標のプロット
@@ -752,24 +717,25 @@ for (idx in 1:nrow(df_c_eval)) {
           xlab = &quot;&quot;) 
   abline(h = 0, lty = 2)
 }</code></pre>
-<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 </div>
 <div id="meaningful-cluster" class="section level2">
 <h2>meaningful clusterをプロットする関数</h2>
-<p>以上をまとめて， meaningful clusterをプロットする関数plot_meaningful_clusterも定義しておきましょう。こちらも Rコード<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。</p>
+<p>以上をまとめて， meaningful clusterをプロットする関数plot_meaningful_clusterも定義しておきましょう。こちらも Rスクリプトファイル，<a href="https://kkatahira.github.io/personality/functions_component_evaluation.R">functions_component_evaluation.R</a>に含まれています。</p>
 <p>この関数を実行してみます。</p>
 <pre class="r"><code>plot_meaningful_cluster(res_ec, # 関数eval_componentの出力
                            component.centers, 
                            p.threshold = 0.01, # 有意水準
                            enrichment.threshold = 1.25 # enrichmentの閾値
                            )</code></pre>
-<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-1.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-2.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-21-3.png" width="672" /></p>
-<p>次のページ(<a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a> )ではこの関数を使って，本ページと同じ処理を行います。</p>
-<p>また，次ページではデータ生成の過程も省略して 簡潔にするため，本ページで生成したデータを以下のようにcsv形式で保存しておきます。</p>
+<p><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-20-1.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-20-2.png" width="672" /><img src="fa_GMM_kd_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
+<p><a href="fa_GMM_kd_minimum.html">次のページ</a>ではこの関数を使って，本ページと同じ処理を行います。</p>
+<p>また，次のページではデータ生成の過程も省略して 簡潔にするため，本ページで生成したデータを以下のようにcsv形式で保存しておきます。</p>
 <pre class="r"><code> write.csv(df_data, &quot;./data_fa_GMM1.csv&quot;, 
              row.names = FALSE)</code></pre>
-<p>このデータは，以下のように読み出せます。</p>
+<p>このデータは，以下のようにして読み出すことができます。</p>
 <pre class="r"><code>df_data &lt;- read.csv(&quot;./data_fa_GMM1.csv&quot;, header = TRUE)</code></pre>
+<p>(<a href="fa_GMM_kd_minimum.html">Gerlachの分析法 (ミニマム版)</a> へ)</p>
 </div>
 
 
