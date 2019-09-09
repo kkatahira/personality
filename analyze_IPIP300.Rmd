@@ -33,7 +33,7 @@ library(GGally)
 データファイルIPIP300.datはJohnson's IPIP-NEO data repository (https://osf.io/tbmh5/) 
 からダウンロードできます。
 ここでは，このファイルを"C:/data/personality/IPIP300.dat"
-においてあるものとしています。パスは適宜ご自身の環境に合わせて
+においてあるものとしています。以下のスクリプトのパスは適宜ご自身の環境に合わせて
 書き換えてください。
 
 ## データの読み込み
@@ -54,7 +54,7 @@ n.used.data <- 0
 for (idx in 1:n.data){
   
   # 回答があるのは34列目から333列目　
-  # そこを抜き出す。
+  # そこを抜き出す
   a <- substring(dat.raw[[idx]],34, 333)
   
   a.numeric <- as.numeric( unlist(strsplit(a,"")))
@@ -76,14 +76,15 @@ df_data <- as.data.frame(dat.matrix[1:n.used.data,])
 ### 因子数の検討
 
 
-因子数はGerlachらにならい，Big fiveモデルに基づき，5にしますが，
-スクリープロットを見てみます。
+GerlachらはBig fiveモデルに基づいて因子数を5にしているようですが，
+一応スクリープロットを見てみます。
 
 ```{r}
 VSS.scree(df_data)
 ```
 
-確かに第6固有値以降で減少幅が小さくなっているとも見れなくもないでしょうか。
+第6固有値以降で減少幅が小さくなっていると見えなくもないでしょうか。
+
 
 ### 因子負荷，因子スコアの推定
 

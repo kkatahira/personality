@@ -353,6 +353,9 @@ div.tocify {
 <li>
   <a href="kd_basics.html">カーネル密度推定</a>
 </li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -383,7 +386,7 @@ library(GPArotation)
 library(tidyverse)
 library(GGally)</code></pre>
 <p>ここでは，Gerlachらにならい，Johnsonの パーソナリティに関する300項目の質問への回答データ (Johnson-300) を 読み込み，因子分析まで行います。</p>
-<p>データファイルIPIP300.datはJohnson’s IPIP-NEO data repository (<a href="https://osf.io/tbmh5/" class="uri">https://osf.io/tbmh5/</a>) からダウンロードできます。 ここでは，このファイルを“C:/data/personality/IPIP300.dat” においてあるものとしています。パスは適宜ご自身の環境に合わせて 書き換えてください。</p>
+<p>データファイルIPIP300.datはJohnson’s IPIP-NEO data repository (<a href="https://osf.io/tbmh5/" class="uri">https://osf.io/tbmh5/</a>) からダウンロードできます。 ここでは，このファイルを“C:/data/personality/IPIP300.dat” においてあるものとしています。以下のスクリプトのパスは適宜ご自身の環境に合わせて 書き換えてください。</p>
 </div>
 <div class="section level2">
 <h2>データの読み込み</h2>
@@ -401,7 +404,7 @@ n.used.data &lt;- 0
 for (idx in 1:n.data){
   
   # 回答があるのは34列目から333列目　
-  # そこを抜き出す。
+  # そこを抜き出す
   a &lt;- substring(dat.raw[[idx]],34, 333)
   
   a.numeric &lt;- as.numeric( unlist(strsplit(a,&quot;&quot;)))
@@ -420,10 +423,10 @@ df_data &lt;- as.data.frame(dat.matrix[1:n.used.data,])</code></pre>
 <h2>因子分析</h2>
 <div class="section level3">
 <h3>因子数の検討</h3>
-<p>因子数はGerlachらにならい，Big fiveモデルに基づき，5にしますが， スクリープロットを見てみます。</p>
+<p>GerlachらはBig fiveモデルに基づいて因子数を5にしているようですが， 一応スクリープロットを見てみます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
 <p><img src="analyze_IPIP300_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>確かに第6固有値以降で減少幅が小さくなっているとも見れなくもないでしょうか。</p>
+<p>第6固有値以降で減少幅が小さくなっていると見えなくもないでしょうか。</p>
 </div>
 <div class="section level3">
 <h3>因子負荷，因子スコアの推定</h3>
