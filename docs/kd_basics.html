@@ -373,10 +373,10 @@ div.tocify {
 </div>
 
 
-<p>ここでは，Rのksパッケージを使ったカーネル密度推定を行います。 カーネル密度推定は，データから確率密度関数を推定するノンパラメトリックな手法の一つです。</p>
+<p>ここでは，Rのksパッケージを使ったカーネル密度推定を行います。 カーネル密度推定は，データから確率密度関数を推定するノンパラメトリックな手法の一つです。カーネル密度推定の原理については， <a href="https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%BC%E3%83%8D%E3%83%AB%E5%AF%86%E5%BA%A6%E6%8E%A8%E5%AE%9A">Wikipediaの記事の「直観的説明」</a>がわかりやすいです。</p>
 <div class="section level2">
 <h2>準備</h2>
-<p>本ページで使用する以下のパッケージがインストールされていない場合は，以下のコマンドをコンソールに入力してインスト―ルしてください。</p>
+<p>本ページで使用するパッケージがインストールされていない場合は，以下のコマンドをコンソールに入力してインスト―ルしてください。</p>
 <pre class="r"><code>install.packages(&quot;ks&quot;)
 install.packages(&quot;mvtnorm&quot;)</code></pre>
 <p>必要なパッケージを読み込みます。</p>
@@ -385,7 +385,7 @@ library(mvtnorm)</code></pre>
 </div>
 <div class="section level2">
 <h2>データの生成</h2>
-<p>ここでは1000人は2次元の標準正規分布 (平均は(0,0), 分散・共分散行列は単位行列) に従い， 100人は平均は(1,1)， 分散・共分散行列は対角成分が0.05，非対角成分は0の正規分布に従うとします。 座標(1,1)付近の密度が特に高くなっているというデータになります。</p>
+<p>ここでは1000人は2次元の標準正規分布 (平均は(0,0), 分散・共分散行列は単位行列) に従い， 100人は平均は(1,1)， 分散・共分散行列は対角成分が0.05 (分散が小さい)，非対角成分は0の正規分布に従うとします。 座標(1,1)付近の密度が特に高くなっているというデータになります。</p>
 <pre class="r"><code># 乱数のシードを決定
 set.seed(1)
 
@@ -399,7 +399,7 @@ dat2 &lt;- rmvnorm(n = 1000,
                 mean = c(1.0,1.0),
                 sigma = diag(2)*0.05  )
 
-# データを連結してデータフレームに格納
+# 連結してデータフレームに格納
 df_data &lt;- data.frame(rbind(dat1,dat2))</code></pre>
 <p>今後，プロットや密度関数推定のために， 扱う変数の範囲を指定しておきます。</p>
 <p>そのため，以下で実際のデータの最大値，最小値を求めます。</p>
@@ -418,7 +418,7 @@ xmax &lt;- c(4.5, 4.5)    # (X1の最大値，X2の最大値) </code></pre>
 <pre class="r"><code>par(pty = &quot;s&quot;)
 # 高密度なサンプルは赤色にしてプロット
 plot(dat1[,1],dat1[,2],
-     pch = &quot;.&quot;, cex = 2, 
+     pch = &quot;.&quot;, cex = 2, xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))
 points(dat2[,1],dat2[,2],
@@ -426,7 +426,7 @@ points(dat2[,1],dat2[,2],
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre class="r"><code># 色分けせずプロット
 plot(df_data$X1,df_data$X2,
-     pch=&quot;.&quot;,cex = 2,
+     pch = &quot;.&quot;, cex = 2, xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
@@ -457,11 +457,6 @@ image(density.original,
       y = eval.points.y,
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
       col = viridis::viridis(20))</code></pre>
-<pre><code>## Registered S3 methods overwritten by &#39;ggplot2&#39;:
-##   method         from 
-##   [.quosures     rlang
-##   c.quosures     rlang
-##   print.quosures rlang</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>(X1, X2) = (1, 1) の周辺に密度の高い領域が存在することがはっきりしました。</p>
 </div>
@@ -470,16 +465,17 @@ image(density.original,
 <p>上で見た高密度だと思われる領域が有意に高密度であるかどうか データから判定する方法を考えます。 ここでは<a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlachら</a>が用いた，ヌルモデルを構築し，もとの密度と比較する方法を紹介します。</p>
 <p>まず，変数間の関係をランダマイズ (シャッフル) し， 周辺分布を保ちながら，変数間の依存関係を崩したサンプルを作ります。</p>
 <pre class="r"><code>x_shuffeled &lt;- apply(df_data, MARGIN = 2, sample)</code></pre>
-<p>上の1行では，関数applyで各列に関数sampleを適用しています。sampleは引数の配列の順番をシャッフルする関数です。</p>
+<p>上の1行では，関数applyで各列に関数sampleを適用しています。sampleは与えられた配列の順番をシャッフルする関数です。</p>
 <p>(参考) これをfor文で書くと，例えば以下のようになります。</p>
-<pre class="r"><code>x_shuffeled &lt;- matrix(0,n.sample,2)
+<pre class="r"><code>x_shuffeled &lt;- matrix(0, n.sample,2)
 
 for (idx in 1:2)
   x_shuffeled[,idx] &lt;- sample(df_data[,idx])</code></pre>
 <p>以下でシャッフルしたデータの散布図を見てみます。</p>
 <pre class="r"><code>par(pty = &quot;s&quot;) 
 plot(x_shuffeled[,1], x_shuffeled[,2],
-     pch=&quot;.&quot;,cex = 2, 
+     pch = &quot;.&quot;, cex = 2, 
+     xlab = &quot;X1&quot;, ylab = &quot;X2&quot;,
      xlim = c(xmin[1],xmax[1]), 
      ylim = c(xmin[2],xmax[2]))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
@@ -509,7 +505,7 @@ image(density.shuffle,
       main = &quot;null model&quot;, zlim = c(0,zmax), 
       col = viridis::viridis(20))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<p>左のオリジナルなデータは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
+<p>左のオリジナルなデータでは，座標(1,1)周辺の高密度領域がヌルモデルと比べて密度が高くなっている様子がわかります。</p>
 </div>
 <div class="section level2">
 <h2>ヌルモデルとの比較によるクラスターの評価</h2>
@@ -526,7 +522,7 @@ image(diff,
       main = &quot;Difference&quot;, zlim = c(0,max(diff)),
       col = viridis::viridis(20))</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<p>この差が有意なものかどうかGerlachらにならい検定してみます。 検定では，ヌルモデルの密度はシャッフルの仕方で変わるので，興味のある座標において，ヌルモデルの密度の分布を求め，その分布の中の棄却域に入れば有意であるとします。Gerlachらは有意水準を0.01としています。</p>
+<p>この差が有意なものかどうかGerlachらにならい検定してみます。 検定では，ヌルモデルの密度はシャッフルの仕方で変わるので，各座標において，ヌルモデルの密度の分布を求め，その分布の中の棄却域に入れば有意であるとします。Gerlachらは有意水準を0.01としています。</p>
 <pre class="r"><code>n.shuffle &lt;- 1000 # シャッフルする回数
 
 # ヌルモデルの密度を超えた回数を格納する配列
@@ -571,8 +567,9 @@ image(eval.points.x,
       zlim = c(0,1),
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
-<p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /> (1,1)周辺の領域は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
-<p>上のごみクラスターには，実際のサンプルがほとんどない位置に 存在するものも見られます。 データの密度が低いところは，推定誤差などの影響も受けやすくなり， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の5%に満たないところは除外してみます。</p>
+<p><img src="kd_basics_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>(1,1)周辺の領域は有意であると判定されます。 一方で，それ以外にも有意になっている“ごみクラスター”もみられます。</p>
+<p>上のごみクラスターには，実際のサンプルがほとんどない位置に 存在するものも見られます。 データの密度が低いところは，推定誤差などの影響も受けやすくなり， あまり意味のある結果とは言えません。そこで，データの密度が，最高値の5%に満たないところは除外してみます (これはGerlachらは行っていない手続きです)。</p>
 <pre class="r"><code>d.threshold &lt;- max(density.original) * 0.05
 
 par(pty=&quot;s&quot;)
@@ -602,18 +599,18 @@ image(eval.points.x,
       xlab = &quot;X1&quot;, ylab = &quot;X2&quot;
 )</code></pre>
 <p><img src="kd_basics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<p>また少しきれいにはなりましたが，まだ“ごみクラスター”は残っています。 <!-- (fMRIのデータ解析で行われるように，クラスターサイズで --> <!-- 有意性を判定するという方法も考えられます。) --> Gerlachらは，このように全領域にわたる評価点を網羅的に評価するというのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような計算を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。</p>
-<p>また，Gerlachらが扱ったようにデータの次元数が5次元にもなると，このように網羅的な密度の 評価はいずれにしても計算負荷の問題から現実的ではなくなります。</p>
+<p>また少しきれいにはなりましたが，まだ“ごみクラスター”は残っています。 <!-- (fMRIのデータ解析で行われるように，クラスターサイズで --> <!-- 有意性を判定するという方法も考えられます。) --> しかし，Gerlachらは，このように全領域にわたる評価点を網羅的に評価するのではなく， まず混合正規分布のフィットを行い，そのピークの座標だけで上のような計算を行っています。 ですので，ごみクラスターの存在はそこまで問題にはならないかもしれません。</p>
+<p>また，Gerlachらが扱ったデータのようにデータが5次元にもなると，このように網羅的な密度の評価はいずれにしても計算負荷の問題から困難になります。</p>
 </div>
 <div class="section level2">
 <h2>注意点</h2>
-<p>上記のヌルモデルとの密度比較による分析手法は， 「同じ周辺分布を持つ独立な分布と 密度が有意に異なる」領域を判定するものです。 単に「相関がある」といだけも独立ではなくなるので， 相関があれば，特別な高密度領域が なくても多くの領域が有意と判定されてしまいます。 例えば以下のようなスクリプトで相関のある2次元正規分布から 人工データを生成して同様の解析を試してみましょう。</p>
+<p>上記のヌルモデルとの密度比較による分析手法は， 「同じ周辺分布を持つ独立な分布と 密度が有意に異なる」領域を判定するものです。 単に「相関がある」といだけも独立ではなくなるので， 相関があれば，特別な高密度領域が なくても多くの領域が有意と判定されてしまいます。 (例えば以下のようなスクリプトで相関のある2次元正規分布から人工データを生成して同様の解析を試してみましょう。)</p>
 <pre class="r"><code># 相関のあるデータ
 sigma &lt;- matrix(c(1,0.4,0.4,1), nrow = 2, ncol = 2)
 df_data &lt;- data.frame(rmvnorm(n = 10000,
                 mean = c(0,0),
                 sigma = sigma))</code></pre>
-<p>したがって，基本的には (2次の) 相関はゼロにしておかないと この分析をする意義は損なわれると思います。 Gerlachらは因子スコアに対してこの検定をしているのですが， 因子分析で直交回転をすることで， 因子スコア間の相関はゼロに近い値になるようにしています。 (因子スコアの推定値については完全に無相関になるような推定法が用いられているわけではありませんが，そこまで大きな問題ではないかもしれません)。</p>
+<p>したがって，基本的には扱うデータの (2次の) 相関はゼロにしておかないと， この分析をする意義は損なわれると思います。 Gerlachらは因子スコアに対してこの分析をしているのですが， 事前の因子分析で直交回転を用いることで， 因子スコア間の相関はゼロに近い値になるようにしています。 (因子スコアの推定値については完全に無相関になるような推定法が用いられているわけではありませんが，そこまで大きな問題ではないかもしれません)。</p>
 <p>では，単純な相関はない状況で，独立性を仮定したヌルモデルより 密度が高い，ということはどういうことを意味しているのでしょうか。 これは適用する問題の構造や実際の分布の形状に応じて考えなければならないと思います。</p>
 </div>
 
