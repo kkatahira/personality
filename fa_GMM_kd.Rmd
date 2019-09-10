@@ -41,10 +41,9 @@ $y_{j} = a_{j1} f_{1} + a_{j2} f_{2} + \epsilon_{j}$で与えられるとする�
 # 乱数のシードを設定
 set.seed(1)
 
-# サンプル数
+# サンプル数 (回答者数)
 n.sample <- 1000
 
-n <- 100 # 回答者数
 p <- 10  # 項目数
 
 # 因子負荷
@@ -55,7 +54,7 @@ a2 <- c(0,0,0,0,0,1,1,1,1,1) + rnorm(10,mean=0,sd=0.5) # factor 2 項目6-10に�
 y <- matrix(nrow = n.sample, ncol = p)
 
 # 真の因子の値を入れるデータフレーム
-df_fs <- data.frame(matrix(nrow = n, ncol = 2))
+df_fs <- data.frame(matrix(nrow = n.sample, ncol = 2))
 
 # 3つのコンポーネントからなる正規分布を想定する
 # 各コンポーネントの平均，分散・共分散行列を設定
