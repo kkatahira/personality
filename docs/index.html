@@ -12,7 +12,7 @@
 
 
 
-<title>「機械学習と心理学との接点」補足資料</title>
+<title>「機械学習と心理学の接点」補足資料</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -368,21 +368,21 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">「機械学習と心理学との接点」補足資料</h1>
+<h1 class="title toc-ignore">「機械学習と心理学の接点」補足資料</h1>
 
 </div>
 
 
 <div class="section level2">
 <h2>このサイトについて</h2>
-<p>(2019/09/09現在 作成中です。見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。お気づきの点は片平までご連絡ください。)</p>
-<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学との接点</a> (片平担当分)で紹介する方法をRで実行するための情報を掲載しています。</p>
+<p>2019/09/10現在 (前日にもかかわらず) 作成中です。見直しができていない箇所が多いので， 誤りも多々あると思います。ご覧いただく際はご注意ください。お気づきの点は片平までご連絡ください。</p>
+<p>本サイトでは，日本心理学会第83回大会[TWS-004] <a href="https://www.micenavi.jp/jpa2019/search/detail_program/id:151">チュートリアル・ワークショップ004 機械学習と心理学の接点</a> (片平担当分)で紹介する方法をRで実行するための情報を掲載しています。</p>
 <hr />
 </div>
 <div class="section level2">
 <h2>内容</h2>
-<p>本チュートリアルでは，大規模なパーソナリティの尺度データから4つのタイプ (類型)を見出した <a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlach et al. (2018)</a> の方法を解説します。</p>
-<p>この論文では“state-of-the-art”なクラスタリング手法を使ったと書かれていますが，その分析法の要素技術はどれも古典的な機械学習・統計分析の手法です。</p>
+<p>本チュートリアルでは，大規模なパーソナリティの尺度データから4つのタイプ (類型)を見出した <a href="https://www.nature.com/articles/s41562-018-0419-z">Gerlach et al. (2018)</a> の方法を中心に解説します。</p>
+<p>この論文では“state-of-the-art”なクラスタリング手法を使ったと書かれていますが，その分析法の要素技術はどれも古典的・標準的な機械学習・統計分析の手法です。</p>
 <hr />
 <div class="section level3">
 <h3>要素技術編</h3>
@@ -390,7 +390,7 @@ div.tocify {
 <ul>
 <li><a href="fa_basics.html">因子分析</a></li>
 <li><a href="GMM_basics.html">混合正規分布モデル (Gaussian Mixture Model, GMM)</a></li>
-<li><a href="kd_basics.html">カーネル密度推定</a></li>
+<li><a href="kd_basics.html">カーネル密度推定</a> (加えて，ヌルモデルとの比較によるクラスターの有意性の評価についても)</li>
 </ul>
 <p>Gerlachの分析は，上記の手法を組み合わせ，以下のような流れで行われます。</p>
 <ol style="list-style-type: decimal">
@@ -403,22 +403,23 @@ div.tocify {
 <h3>実践編</h3>
 <ul>
 <li><a href="fa_GMM_kd.html">Gerlachらの分析法</a> 上記の要素技術を組み合わせてGerlachらの一連の分析を行います。</li>
-<li><a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a><br />
-上の<a href="fa_GMM_kd.html">Gerlachらの分析法</a>で作ったデータや関数などを使って，Gerlachらの分析を行うミニマムなコードを例示します。 とりあえず手持ちのデータで試してみたい，という方はここだけ試していただいてもよいかと思います (ただし結果の妥当性は保証できませんので，ご自身の責任でお願いします)。</li>
+<li><p><a href="fa_GMM_kd_minimum.html">Gerlachらの分析法(ミニマム版)</a><br />
+上の<a href="fa_GMM_kd.html">Gerlachらの分析法</a>で作ったデータや関数などを使って，Gerlachらの分析を行うミニマムなコードを例示します。 とりあえず手持ちのデータで試してみたい，という方はここだけ試していただいてもよいかと思います (ただし結果の妥当性は保証できませんので，ご自身の責任でお願いします)。</p></li>
 <li><a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a><br />
 Gerlachらが解析したJohnson-300データを読み込み，因子スコアを推定します。</li>
 <li><a href="analyze_IPIP300_2.html">実データ (Johnson-300) の解析2</a><br />
 上で推定した因子スコアに対し，GMMのフィッティングを行い，meaningful clusterを抽出します。</li>
-<li><a href="analyze_IPIP300_3.html">実データ (Johnson-300) の解析3</a><br />
-GMMのために使っていたパッケージMClustの代わりに，Pythonのオープンソース機械学習ライブラリscikit-learnのGMM関数を用います。 少なくともこのデータに関しては，scikit-learnの方が良い結果が得られるようです。</li>
+<li><p><a href="analyze_IPIP300_3.html">実データ (Johnson-300) の解析3</a><br />
+GMMのために使っていたパッケージMClustの代わりに，Pythonの機械学習ライブラリscikit-learnのGMM関数を用います。 少なくともこのデータに関しては，scikit-learnの方が良い結果が得られるようです。</p></li>
 </ul>
+<p>※実データ (Johnson-300) の解析2,3の計算はGerlachと同じようにやろうとすると かなり時間がかかります (ノートPCでは一晩では終わらないくらい)。 そのため，ここでは繰り返し回数などかなり抑えています。</p>
 </div>
 <div class="section level3">
 <h3>発展編</h3>
 <!-- 上記の分析の検討や，他の方法などの紹介をする予定です。 -->
 <!-- また，機械学習や統計モデリングを心理学のデータ解析に使用する方法やその注意点について議論します。 -->
 <ul>
-<li><a href="GMM_skew.html">GMMにおける分布の歪みの効果</a><br />
+<li><a href="GMM_skew.html">GMMのフィッティングにおける分布の歪みの効果</a><br />
 分布にクラスター構造がなくても，“meaningful cluster”が出てきてしまう問題をシミュレーションで検討します。</li>
 <li><a href="binary_analysis.html">二値化解析による非一様性の分析</a><br />
 GMMを使わない素朴な解析により，因子スコアの分布に 非一様性があることを確認します。関連する未解決問題も議論します。</li>
@@ -430,12 +431,12 @@ GMMを使わない素朴な解析により，因子スコアの分布に 非一�
 <h2>本サイトの方針</h2>
 <div class="section level3">
 <h3>まずは自分で作ったデータを使う</h3>
-<p>本チュートリアルに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルの背後に仮定されているデータ生成過程を使って人工的なデータを生成してみて， そのデータを分析してみる，という方法をとっています。</p>
+<p>本チュートリアルに限らず，私は新しいモデルやデータ分析手法を用いるときは， 既存のサンプルデータを使うのではなく， まずはモデルで仮定されているデータ生成過程に基づいて人工的なデータを生成してみて，そのデータを分析してみる，という方法をとっています。</p>
 <p>その方が，正解が分かっている分，推定結果の評価もしやすいですし， モデルの仮定と真のデータ生成過程にミスマッチがあるときに何が起きるか， どのくらいのサンプル数があれば安定した結果が得られるか，などの 検討もできてよいと考えています (例えば <a href="https://www.sciencedirect.com/science/article/pii/S0022249616300025">Katahira (2016)</a>, <a href="https://www.sciencedirect.com/science/article/pii/S0022249617302407">Katahira (2018)</a>, <a href="https://www.sciencedirect.com/science/article/pii/S0022249618300610">Toyama et al. (2019)</a>, <a href="https://psyarxiv.com/wua9j/">Katahira et al. (2019)</a>など)。</p>
 </div>
 <div id="r" class="section level3">
 <h3>Rスクリプトの書き方</h3>
-<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRにはあまり慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない人 (私自身そうですが…) にとっては流れがつかみにくくなるので，特に基礎的なところではapply系の関数は極力抑えるようにしています。</p>
+<p>Rのコードは，極力簡潔に，しかし多少冗長でも，他の言語を使用していてRにはあまり慣れていない方にも処理の流れが追いやすいように書きたいと思います。 例えば，apply系の関数を使うとfor文を使わず簡潔に書けることが多いのですが， Rに慣れていない人 (私自身そうですが…) にとっては流れがつかみにくくなると思います。そのため，特に基礎的なところではapply系の関数の使用は極力抑えるようにしています。</p>
 </div>
 </div>
 <div class="section level2">
