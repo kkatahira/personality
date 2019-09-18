@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>因子分析における回転の因子スコアへの影響</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">因子分析における回転の因子スコアへの影響</h1>
+
+</div>
+
+
+<p>ここでは因子分析における，因子負荷の推定・回転，因子スコアの推定について，以下を確認します。</p>
+<ul>
+<li><p>因子負荷の初期解は因子スコアの推定値が無相関になるように選ばれる。</p></li>
+<li><p>しかし，回転をした場合 (それが直交回転であっても) 因子スコアが無相関となるとは限らない。(したがって，ヌルモデルとの密度比較をする際は，因子スコアが無相関とみなせることをを確認する必要がある)</p></li>
+</ul>
+<p>結論だけ確認したい方はこのページの最後の3枚の図をご覧ください。</p>
+<div class="section level2">
+<h2>準備</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(psych)
+library(GPArotation)
+library(mvtnorm)
+library(tidyverse)</code></pre>
+</div>
+<div class="section level2">
+<h2>データの生成</h2>
+<p>データは因子分析モデルから生成しますが， 因子<span class="math inline">\(f\)</span>間には相関があるものとします。この仮定はそれぞれの因子は独立に標準正規分布に従う， と仮定される通常の因子分析モデルと異なります。 したがって，これは真のモデルとフィットするモデルの構造が異なる， モデルに誤設定がある例になっています (ただし，後で確認するように，この二つのモデルは表現が異なるだけで，等価な統計モデルになります)。</p>
+<pre class="r"><code># 乱数のシードを設定
+set.seed(1)
+
+# サンプル数
+n.sample &lt;- 1000
+p &lt;- 10  # 項目数
+
+# 仮想回答データを入れる変数のメモリを確保
+y &lt;- matrix(nrow = n.sample, ncol = p)
+
+# 真の因子スコアを入れる行列のメモリを確保
+tf &lt;- matrix(0, nrow = n.sample, ncol = 2) 
+
+# 真の因子スコアの分散・共分散行列
+r &lt;- 0.6 # 因子スコア間の相関係数
+Sigma &lt;-  matrix(c(1, r, r, 1), ncol = 2)
+
+# 真の因子スコアの生成
+tF &lt;- rmvnorm(n = n.sample, mean = c(0,0), sigma = Sigma)
+
+# 因子負荷
+a1 &lt;- c(2,2,2,2,2,0,0,0,0,0)  # factor 1 項目1-5に値を持つ
+a2 &lt;- c(0,0,0,0,0,1,1,1,1,1)  # factor 2 項目6-10に値を持つ
+A &lt;- cbind(a1,a2) # 行列にまとめる
+
+# 独自因子の生成
+UD &lt;- rmvnorm(n = n.sample, mean = numeric(p), sigma = diag(p) ) # 分散は1に
+
+# 仮想回答データの生成
+y &lt;- tF %*% t(A) + UD
+
+# 真の因子の値を入れるデータフレーム
+df_true_f &lt;- data.frame(tF)
+names(df_true_f) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)
+
+# 観測される仮想回答データをデータフレームに格納
+df_data &lt;- data.frame(y)</code></pre>
+<p>(参考) forループを使うと，上の仮想回答データの生成部は以下のように書けます。</p>
+<pre class="r"><code>for (idx in 1:n.sample) {
+
+  tF[idx,] &lt;- rmvnorm(n = 1, mean = c(0,0), sigma = Sigma )
+
+  # 回答者idxの仮想回答データ
+  y[idx,] &lt;- a1 * tf[idx,1] + a2 * tf[idx,2] +
+    rnorm(p, mean = 0, sd = 1) # 独自因子
+}</code></pre>
+</div>
+<div class="section level2">
+<h2>因子負荷の推定　回転なし</h2>
+<p>最尤法により因子負荷を推定します。ここでは回転は行わず，初期解を用います。</p>
+<pre class="r"><code>res_fa &lt;- fa(r = df_data,
+             nfactors = 2,       # 因子数
+             rotate = &quot;none&quot;,    # 回転はせず，初期解を使用
+             fm = &quot;ml&quot;           # 最尤法を指定
+             )
+
+# 因子スコアを推定する
+# res_faでも因子スコアはres_fa$scoresとして出力されるが，
+# ここはHarmanの方法を指定して改めて推定する
+fsc &lt;- factor.scores(df_data,
+                     f = res_fa,
+                     method = &quot;Harman&quot;)
+
+df_sc &lt;- data.frame(fsc$scores)
+names(df_sc) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
+<p>因子スコア間の相関を確認しておきます。</p>
+<pre class="r"><code>round(res_fa$r.scores,5)</code></pre>
+<pre><code>##     ML1 ML2
+## ML1   1   0
+## ML2   0   1</code></pre>
+<p>因子スコア間の相関 (対角成分) はゼロになっていることが確認できます。</p>
+<div class="section level3">
+<h3>因子負荷のプロット</h3>
+<p>因子負荷の初期解は以下のようになります。</p>
+<pre class="r"><code>cor.plot(res_fa, numbers = T)</code></pre>
+<p><img src="fa_rotation_files/figure-html/data-1.png" width="672" /></p>
+<p>一つ目の因子“ML1”はほぼすべての変数に対しする因子負荷が値を持っており，解釈しづらい結果になっています。そこで回転が必要になります。 なお，この行列を因子負荷<span class="math inline">\(A\)</span>の推定値ということで<span class="math inline">\(\hat{A}\)</span>と表します (この表記は後で用います)。 <!-- 出力されるデータが標準化されるようにパラメータは推定されるので， --> <!-- 値の大きさはデータ生成時に使った真の因子負荷$A$から変わっていますが， --> <!-- 同じ構造になっていることが確認できます。 --></p>
+</div>
+<div class="section level3">
+<h3>観測データの相関行列</h3>
+<p>ここでは，推定された因子分析モデルがデータの構造を 適切に表現できていることを確認します。</p>
+<p>まず，以下で観測データの相関行列をプロットします。</p>
+<pre class="r"><code>cor.plot(cor(df_data), numbers = T)</code></pre>
+<p><img src="fa_rotation_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>因子分析では，基本的にはこのデータの相関行列を説明するように 因子負荷や独自因子などが推定されます。以下では推定されたモデルにより どのように相関行列が説明されるのか見てみます。</p>
+</div>
+<div class="section level3">
+<h3>理論的な相関行列</h3>
+<p>推定されたモデルが出力するデータの相関行列 <span class="math inline">\(R\)</span> は，モデルのパラメータをもとに以下で与えられます <span class="math display">\[ R = \hat{A} \hat{A}^T + \hat{D}^2 \]</span> <span class="math inline">\(\hat{D}^2\)</span>は独自因子の分散・共分散行列 (独自因子間に相関はないと仮定するので，対角行列) の推定値です。 <span class="math inline">\(\cdot^T\)</span>は行列の転置を表します。</p>
+<p>この相関行列を実際のモデルの推定値で計算してみます。</p>
+<pre class="r"><code>Aest &lt;- res_fa$loadings
+D2est &lt;- diag(1 - res_fa$communalities)
+R &lt;- Aest %*% t(Aest) + D2est
+cor.plot(R, numbers = T)</code></pre>
+<p><img src="fa_rotation_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>上で見た観測データの相関行列とよく一致していることが確認できます。 上述のようにフィットしているモデルの構造は 真のモデルとは異なっているのですが， 出力されるデータの相関行列は真のモデルとほぼ同じものになっています。 これは，因子間の相関が生み出す変数間の相関を，代わりに因子負荷を調整することで表現できるためです。この点は，この後見るように，回転させた因子負荷行列からよりはっきりします。</p>
+</div>
+</div>
+<div class="section level2">
+<h2>因子負荷の推定　バリマックス回転</h2>
+<p>以下では最尤法により因子負荷を推定しています。 また，バリマックス回転で因子負荷の直交回転を行っています。</p>
+<pre class="r"><code>res_fa2 &lt;- fa(r = df_data,
+             nfactors = 2,       # 因子数
+             rotate = &quot;varimax&quot;, # 回転法はvarimaxを指定
+             fm = &quot;ml&quot;           # 最尤法を指定
+             )
+
+fsc2 &lt;- factor.scores(df_data,
+                     f = res_fa2,
+                     method = &quot;Harman&quot;)
+
+df_sc2 &lt;- data.frame(fsc2$scores)
+names(df_sc2) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)</code></pre>
+<div id="-1" class="section level3">
+<h3>因子負荷のプロット</h3>
+<pre class="r"><code>cor.plot(res_fa2, numbers = T)</code></pre>
+<p><img src="fa_rotation_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>回転前より解釈しやすい形になりました。 ただし，データ生成に用いた真のモデルの因子負荷と異なり， いずれの因子もすべての変数に値を持っています (因子ML1も，変数X1-X5だけでなく，X6-X10にも値を持っています)。 これにより，真のモデルに含まれていた 因子間の相関と同じ効果が得られます。</p>
+</div>
+<div id="-1" class="section level3">
+<h3>理論的な相関行列</h3>
+<p>回転前と同様に，モデルが生成するデータの相関行列をプロットしてみます。</p>
+<pre class="r"><code>Aest &lt;- res_fa2$loadings
+D2est &lt;- diag(1 - res_fa2$communalities)
+R &lt;- Aest %*% t(Aest) + D2est
+cor.plot(R, numbers = T)</code></pre>
+<p><img src="fa_rotation_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>回転してもモデルが生成するデータの相関行列は変わらない，つまり 因子分析モデルは回転に対して不変 (回転に関して不定性がある)，ということが確認できました。</p>
+</div>
+</div>
+<div class="section level2">
+<h2>推定された因子スコアの比較</h2>
+<p>最後に，回転の様子が分かりやすいよう真の因子の象限別に色分けして， 真の因子スコア，回転前の因子スコア，回転後の因子スコアの散布図をプロットして比較します。相関係数も図のタイトルに表します。 <img src="fa_rotation_files/figure-html/unnamed-chunk-11-1.png" width="672" /><img src="fa_rotation_files/figure-html/unnamed-chunk-11-2.png" width="672" /><img src="fa_rotation_files/figure-html/unnamed-chunk-11-3.png" width="672" /></p>
+<p>回転前は因子スコア間の相関はゼロに近くなるよう推定されていますが，回転後は弱いながらも正の相関が見られます。</p>
+<p>モデルの設定上は，因子は互いに無相関であると仮定されるのですが，回転をした後に実際のデータから推定される因子スコアは必ずしも無相関とはならないということが確認できました。</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
