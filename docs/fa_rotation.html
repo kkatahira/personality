@@ -373,12 +373,11 @@ div.tocify {
 </div>
 
 
-<p>ここでは因子分析における，因子負荷の推定・回転，因子スコアの推定について，以下を確認します。</p>
+<p>ここでは因子分析における，因子負荷の推定・回転，因子スコアの推定について，以下を確認します (因子スコアの推定法は，Gerlachらが使った方法と 等価であるHarmanの方法を想定します)。</p>
 <ul>
 <li><p>因子負荷の初期解は因子スコアの推定値が無相関になるように選ばれる。</p></li>
 <li><p>しかし，回転をした場合 (それが直交回転であっても) 因子スコアが無相関となるとは限らない。(したがって，ヌルモデルとの密度比較をする際は，因子スコアが無相関とみなせることをを確認する必要がある)</p></li>
 </ul>
-<p>結論だけ確認したい方はこのページの最後の3枚の図をご覧ください。</p>
 <div class="section level2">
 <h2>準備</h2>
 <p>必要なパッケージを読み込みます。</p>
@@ -525,6 +524,25 @@ cor.plot(R, numbers = T)</code></pre>
 <p>最後に，回転の様子が分かりやすいよう真の因子の象限別に色分けして， 真の因子スコア，回転前の因子スコア，回転後の因子スコアの散布図をプロットして比較します。相関係数も図のタイトルに表します。 <img src="fa_rotation_files/figure-html/unnamed-chunk-11-1.png" width="672" /><img src="fa_rotation_files/figure-html/unnamed-chunk-11-2.png" width="672" /><img src="fa_rotation_files/figure-html/unnamed-chunk-11-3.png" width="672" /></p>
 <p>回転前は因子スコア間の相関はゼロに近くなるよう推定されていますが，回転後は弱いながらも正の相関が見られます。</p>
 <p>モデルの設定上は，因子は互いに無相関であると仮定されるのですが，回転をした後に実際のデータから推定される因子スコアは必ずしも無相関とはならないということが確認できました。</p>
+</div>
+<div id="anderson-and-rubin" class="section level2">
+<h2>Anderson and Rubinの方法を用いる</h2>
+<p>このページでは， 因子スコアの推定法としてHarmanの方法を用いていましたが， 推定される因子スコアが無相関になるような制約をかけた 推定法も存在します。Anderson and Rubinの方法がそれです (参照: 豊田「因子分析入門」p.174)。 以下では上で作ったデータ (バリマックス法で回転した解) に対して その方法を用いて因子スコアの推定をしてみます。</p>
+<pre class="r"><code># Anderson and Rubinの方法による因子スコア推定
+fsc3 &lt;- factor.scores(df_data, f = res_fa2, method = &quot;Anderson&quot;)
+
+df_sc3 &lt;- data.frame(fsc3$scores)
+names(df_sc3) &lt;- c(&quot;factor.1&quot;,&quot;factor.2&quot;)
+
+par(pty = &quot;s&quot;)
+plot(df_sc3$factor.1, df_sc3$factor.2, pch=&quot;.&quot;,
+     cex = 2,col = df_true_f$orth,
+     main = sprintf(&quot;推定された因子スコア (Anderson and Rubinの方法)\n相関係数 r = %.3f&quot;,
+                    cor(df_sc3$factor.1, df_sc3$factor.2))
+     )</code></pre>
+<p><img src="fa_rotation_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>確かに因子スコア間の相関がゼロになりました。 Gerlachらのような分析をする際は，因子スコア間の相関は ゼロにしておくのが望ましいと考えられるので， はじめからこちらの方法を使うのがよいかもしれません。</p>
+<p>GerlachらがHarmanの方法を使ったのには特別な理由はなく， 使われたライブラリで採用されていたためかと思います。 そこではHarmanの方法とは明記されていないのですが， 使われた機械学習ライブラリscikit-learnの マニュアルをでは因子スコア推定法としてBishipのPRMLが参照されており，その方法はHarmanの方法と等価なもののようです。</p>
 </div>
 
 
