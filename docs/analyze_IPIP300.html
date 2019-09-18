@@ -385,13 +385,13 @@ install.packages(&quot;GGally&quot;)</code></pre>
 library(GPArotation)
 library(tidyverse)
 library(GGally)</code></pre>
-<p>ここでは，Gerlachらにならい，Johnsonの パーソナリティに関する300項目の質問への回答データ (Johnson-300) を 読み込み，因子分析まで行います。</p>
+<p>ここでは，Gerlachらにならい，Johnsonにより公開されている， パーソナリティに関する300項目の質問への回答データ (IPIP-NEO-300) を 読み込み，因子分析まで行います。 この質問項目の並びは <a href="https://osf.io/yk3fd/">IPIP-NEO-ItemKey.xls</a> で確認することができます。 1項目から順に， 神経症傾向 (N), 外向性 (E), 開放性 (O), 協調性 (A) , 誠実性 (勤勉性) (C)に関する質問項目が並び，それが60周するまで， 計300項目並べられています。</p>
 <p>データファイルIPIP300.datはJohnson’s IPIP-NEO data repository (<a href="https://osf.io/tbmh5/" class="uri">https://osf.io/tbmh5/</a>) からダウンロードできます。 ここでは，このファイルを“C:/data/personality/IPIP300.dat” においてあるものとしています。以下のスクリプトのパスは適宜ご自身の環境に合わせて 書き換えてください。</p>
 </div>
 <div class="section level2">
 <h2>データの読み込み</h2>
 <p>IPIP300.datは固定長データ形式で納められています。</p>
-<pre class="r"><code>nmax &lt;- 9999999 # 読み込む最大行数 最初は小さくして試す
+<pre class="r"><code>nmax &lt;- Inf # 読み込む最大行数 最初は小さくして試す
 
 dat.raw &lt;- scan(file = &quot;C:/data/personality/IPIP300.dat&quot;, 
           nmax = nmax,
@@ -418,41 +418,54 @@ for (idx in 1:n.data){
 
 # 不要な行は削除
 df_data &lt;- as.data.frame(dat.matrix[1:n.used.data,])</code></pre>
+<p>“N”の項目 (1, 5, 10,…,296), “E”の項目(2, 6, 11,…,297), “O”の項目(3, 7, 12,…,298), “A”の項目(4, 8, 13,…,299), “C”の項目(5, 9, 14,…,300), の順番になるよう列を並び替えます。</p>
+<pre class="r"><code># 並べ替えのためのインデックス
+idxseq &lt;- c(seq(1,300, by=5), # N
+         seq(2,300, by=5), # E
+         seq(3,300, by=5), # O
+         seq(4,300, by=5), # A
+         seq(5,300, by=5) # C
+)
+
+df_data &lt;- df_data[,idxseq]</code></pre>
 </div>
 <div class="section level2">
 <h2>因子分析</h2>
 <div class="section level3">
 <h3>因子数の検討</h3>
-<p>GerlachらはBig fiveモデルに基づいて因子数を5にしているようですが， 一応スクリープロットを見てみます。</p>
+<p>Gerlachらにならい，Big fiveモデルに基づいて因子数は5にしますが， ここではスクリープロットも見てみます。</p>
 <pre class="r"><code>VSS.scree(df_data)</code></pre>
-<p><img src="analyze_IPIP300_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="analyze_IPIP300_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>第6固有値以降で減少幅が小さくなっていると見えなくもないでしょうか。</p>
 </div>
 <div class="section level3">
 <h3>因子負荷，因子スコアの推定</h3>
-<p>因子分析を行い，推定された因子スコアをデータフレームdf_scに格納します。</p>
-<pre class="r"><code>res_fa &lt;- fa(df_data, 
-             nfactors = 5,
-             rotate = &quot;varimax&quot;,  
-             fm = &quot;ml&quot;
-)
+<p>最尤法とバリマックス回転で因子分析を行い，推定された因子スコアをデータフレームdf_scに格納します。</p>
+<pre class="r"><code>res_fa &lt;- fa(df_data, nfactors = 5, rotate = &quot;varimax&quot;,  fm = &quot;ml&quot;)
 
-fsc &lt;- factor.scores(df_data, 
-                     f = res_fa, 
-                     method = &quot;Harman&quot;)
+# 因子スコアをHermanの方法で推定する
+fsc &lt;- factor.scores(df_data, f = res_fa, method = &quot;Harman&quot;)
 
+# 推定された因子スコアをデータフレームに
 df_sc &lt;- data.frame(fsc$scores)</code></pre>
-<p>因子とBig five modelのdomainを対応させ， 因子にラベルを付けます。 ここでは，1つめの質問項目が“N”に対応する， 2つめの質問項目が“E”に対応する，…という 知識を使ってそれらの項目に因子負荷が高い因子にラベルをつけます。 このやり方はヒューリスティックであり，うまくいかない こともあるので注意が必要です。(本来は全項目の因子負荷を 見て因子のラベルを吟味するべきです)</p>
-<pre class="r"><code>domains &lt;- character(5)
-domains[which.max(res_fa$weights[1,])] &lt;- &quot;N&quot;
-domains[which.max(res_fa$weights[2,])] &lt;- &quot;E&quot;
-domains[which.max(res_fa$weights[3,])] &lt;- &quot;O&quot;
-domains[which.max(res_fa$weights[4,])] &lt;- &quot;A&quot;
-domains[which.max(res_fa$weights[5,])] &lt;- &quot;C&quot;
+</div>
+<div class="section level3">
+<h3>因子の解釈</h3>
+<p>因子負荷は以下のようになります。(19/09/18 全体の因子負荷を見て因子のラベルを決めるように修正しました)</p>
+<pre class="r"><code>cor.plot(res_fa, numbers = F)</code></pre>
+<p><img src="analyze_IPIP300_files/figure-html/data-1.png" width="672" /></p>
+<p>それぞれの因子は以下の項目に高い因子負荷を持っていることがわかります。 (上でN, E, O, A, Cがそれぞれ60項目繰り返されて順に並ぶように項目を並び替えたのでした。)</p>
+<ul>
+<li>1番目の因子 (ML2) は外向性 (E)</li>
+<li>2番目の因子 (ML1) は神経症傾向 (N)</li>
+<li>3番目の因子 (ML4) は誠実性 (C)</li>
+<li>4番目の因子 (ML3) は協調性 (A)</li>
+<li>5番目の因子 (ML5) は開放性 (O)</li>
+</ul>
+<p>これをもとに推定された因子スコアにラベルを付けます。</p>
+<pre class="r"><code>names(df_sc) &lt;- c(&quot;E&quot;,&quot;N&quot;,&quot;C&quot;,&quot;A&quot;,&quot;O&quot;)
 
-names(df_sc) &lt;- domains
-
-# 順番をGerlachらに合わせる
+# 順番を元のデータの並びに合わせるように列を並び替える
 df_sc &lt;- df_sc[,c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&quot;C&quot;)]</code></pre>
 <p>推定された因子スコアをプロットしてみます。 ここではggplotとggpairsを使います。</p>
 <pre class="r"><code># 2次元周辺分布の密度の等高線プロット用の関数
@@ -468,8 +481,8 @@ ggp &lt;- ggpairs(df_sc,
         lower=list(continuous=my_fn))
 
 print(ggp)</code></pre>
-<p><img src="analyze_IPIP300_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<p>これはGerlach et al. (2018)のSupplementary Figure 2に対応する図です。 見比べると，分布の歪みの形状など一致していることが確認できます。</p>
+<p><img src="analyze_IPIP300_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>これはGerlach et al. (2018)のSupplementary Figure 2に対応する図です。 見比べると，分布の形状が一致していることが確認できます。</p>
 </div>
 </div>
 <div id="csv" class="section level2">
