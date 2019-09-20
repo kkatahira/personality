@@ -12,7 +12,7 @@
 
 
 
-<title>実データ (Johnson-300) の解析: 回答ミスがある回答者も含める</title>
+<title>実データ (Johnson-300) の解析: 回答ミスがある回答者の分析</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -368,7 +368,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">実データ (Johnson-300) の解析: 回答ミスがある回答者も含める</h1>
+<h1 class="title toc-ignore">実データ (Johnson-300) の解析: 回答ミスがある回答者の分析</h1>
 
 </div>
 
@@ -380,9 +380,9 @@ div.tocify {
 library(GPArotation)
 library(tidyverse)
 library(GGally)</code></pre>
-<p>Gerlachらは，解析の際，未回答項目が1項目でもある 回答者は解析から除外していました。実は， そういう回答者は全体の半分以上もいます。それでも IPIP-NEO-300だと15万人近くいるので，十分なサンプル数は得られるのですが， 「完全にもれなく回答できる人」というサンプリングバイアスが 働いているのではないか，と気になります。 例えば，そういう人は誠実性が高い，という可能性はないでしょうか。</p>
-<p>ここでは，IPIP-NEO-300に関して，未回答項目がある回答者についても 同様の同じ因子分析モデルを用いて因子スコアを求め， 完全な回答者から系統的な違いがないか確認してみます。</p>
-<p>ここでは基本的には<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>の流れ に沿って解析します。</p>
+<p>Gerlachらは，未回答項目が1項目でもある 回答者は解析から除外していました。実は， そういう回答者は全体の半分以上います。それでも IPIP-NEO-300では完全回答した回答者が15万人近くいるので，十分なサンプル数は得られるのですが，そこには 「完全にもれなく回答できる人」というサンプリングバイアスが 働いているのではないか，と気になります。 例えば，そういう人は誠実性が高い，という可能性はないでしょうか。</p>
+<p>ここでは，IPIP-NEO-300に関して，未回答項目がある回答者についても 同じ因子分析モデルを用いて因子スコアを求め， 完全な回答者との間に違いがないか確認してみます。</p>
+<p>ここでは基本的には<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>の流れ に沿って分析します。</p>
 </div>
 <div class="section level2">
 <h2>データの読み込み</h2>
@@ -403,26 +403,25 @@ for (idx in 1:n.data){
   
   # 回答があるのは34列目から333列目　
   # そこを抜き出す
-  a &lt;- substring(dat.raw[[idx]],34, 333)
+  tmp &lt;- substring(dat.raw[[idx]],34, 333)
   
-  a.numeric &lt;- as.numeric( unlist(strsplit(a,&quot;&quot;)))
+  tmp.numeric &lt;- as.numeric( unlist(strsplit(tmp,&quot;&quot;)))
   
-  count.missing[idx] &lt;- sum(a.numeric == 0)
+  count.missing[idx] &lt;- sum(tmp.numeric == 0)
   
-  # 一つでも無回答 (0) がある回答者は除外する
-  if (!any(a.numeric == 0)) {
-    
+  if (!any(tmp.numeric == 0)) {
+     # 一つでも無回答 (0) がある回答者
     n.used.data &lt;- n.used.data + 1
-    dat.matrix[n.used.data,] &lt;- a.numeric 
+    dat.matrix[n.used.data,] &lt;- tmp.numeric 
     
-  } else if (sum(a.numeric == 0) &lt;= 20) {
+  } else if (sum(tmp.numeric == 0) &lt;= 20) {
     # 無回答の項目が20以下の回答者
     
     n.incomplete &lt;- n.incomplete + 1
     
     # 無回答は0になっているので，NAに
-    a.numeric[a.numeric == 0] &lt;- NA
-    dat.matrix.incomplete[n.incomplete,] &lt;- a.numeric 
+    tmp.numeric[tmp.numeric == 0] &lt;- NA
+    dat.matrix.incomplete[n.incomplete,] &lt;- tmp.numeric 
   }
 }
 
@@ -431,19 +430,19 @@ df_data &lt;- as.data.frame(dat.matrix[1:n.used.data,])
 df_data_ic &lt;- as.data.frame(dat.matrix.incomplete[1:n.incomplete,])
 
 cat(&quot;回答ミス無し回答者数:&quot;, n.used.data, 
-    &quot; 回答ミス無し回答者数:&quot;, n.incomplete,&quot;\n&quot;)</code></pre>
-<pre><code>## 回答ミス無し回答者数: 145388  回答ミス無し回答者数: 161925</code></pre>
+    &quot; 回答ミス有り回答者数:&quot;, n.incomplete,&quot;\n&quot;)</code></pre>
+<pre><code>## 回答ミス無し回答者数: 145388  回答ミス有り回答者数: 161925</code></pre>
 </div>
 <div class="section level2">
-<h2>回答ミスの分布をチェックする</h2>
+<h2>回答ミス数の分布をチェックする</h2>
 <p>無回答項目数の分布を見てみます。</p>
 <pre class="r"><code># 回答ミス数ごとの回答者数分布を棒グラフで見る
 barplot(table(count.missing),
         xlab = &quot;Number of missed items&quot;, ylab = &quot;Frequency&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
-<p>回答ミスが無い回答者が一番多く，そこから回答ミスの数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減っているようです。</p>
-<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，回答ミスをした回答者とは何ら 特性は変わらない，という可能性です。もしそうだとすると， 回答ミスがあった回答者もそうでない回答者も，特性としては なんら変わらない，ということになり，これから 行う解析はあまり見込みのないものになります。</p>
-<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると，(300は項目数) 個人ごとの回答ミス数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
+<p>回答ミスが無い回答者が一番多く，そこから回答ミスの数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減少しているようです。</p>
+<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，回答ミスをした回答者とは何ら 変わらない，という可能性です。もしそうだとすると， 回答ミスがあった回答者もそうでない回答者も，特性としては なんら変わらない，ということになり，これから 行う解析はあまり見込みのないものになります。</p>
+<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの回答ミス数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
 <p>ポアソン分布でこの回答ミス数をフィットしてみましょう。</p>
 <pre class="r"><code># ポアソン分布の最尤推定値はデータの平均値
 lambda_est &lt;- mean(count.missing)
@@ -453,7 +452,7 @@ mp &lt;- barplot(table(count.missing)/length(count.missing),
 
 lines(mp, dpois(0:10, lambda_est),type = &quot;o&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>明らかにポアソン分布 (実線と〇) はこのデータに当てはまりません。 全回答者がそれぞれの項目で独立に同じ確率で反応ミスをしていたと 考えるには，反応ミスがゼロの回答者が多すぎるようです。 反応ミスを全くしない回答者と多少でもする回答者は 何か質的に異なるのかもしれません。 このような生成過程を仮定するモデルとして，ハードルモデル (hurdle model) が知られています。(参考: <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a>) ここではそこまでは検討しませんが， 回答ミスの全くない回答者とそうでない回答者が何か違うかもしれないという 可能性が示唆されたので，パーソナリティにも違いがあるか見ていきましょう。</p>
+<p>明らかにポアソン分布 (実線と〇) はこのデータに当てはまりません。 全回答者がそれぞれの項目で独立に同じ確率で反応ミスをしていたと 考えるには，反応ミスがゼロの回答者が多すぎるようです。 やはり，反応ミスを全くしない回答者と多少でもする回答者は 何かが異なるのかもしれません。 このような生成過程を仮定する統計モデルとして，ハードルモデル (hurdle model) が知られています。(参考: <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a>) ここではそこまでは検討しませんが， 回答ミスの全くない回答者とそうでない回答者が何か違うかもしれないという 可能性が示唆されたので，パーソナリティにも違いがあるか見ていきましょう。</p>
 </div>
 <div class="section level2">
 <h2>因子負荷，因子スコアの推定</h2>
@@ -515,9 +514,10 @@ g &lt;- ggplot(df_sc_g, aes(x=factor.score)) +
 g</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>回答ミスなしの回答者 (ピンク)と 回答ミスありの回答者 (緑)の分布はほぼ完全に重なりました。 周辺分布を見る限りは，回答ミスの有無が パーソナリティの5因子に与える影響はなさそうです。</p>
-<p>分布が重なっているので，単純に回答ミスのない回答者は 誠実性が平均的に高い，といったようなことはなさそうです。</p>
+<p>分布が重なっているので，回答ミスのない回答者は 平均的に誠実性が高い，といったようなことはなさそうです。</p>
 <p>2次元の周辺分布も見てみましょう。</p>
 <pre class="r"><code>ggp &lt;- ggpairs(df_sc, aes(colour=missing, alpha = 0.5), 
+               upper = list(continuous=&#39;blank&#39;), 
                lower=list(continuous=&#39;density&#39;) )
 print(ggp)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-10-1.png" width="672" /> こちらも等高線はほぼ完全に一致し，ここでもやはり反応ミスの有無が分布の形状に与える影響はなさそうです。</p>
