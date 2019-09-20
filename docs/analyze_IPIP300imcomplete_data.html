@@ -380,8 +380,8 @@ div.tocify {
 library(GPArotation)
 library(tidyverse)
 library(GGally)</code></pre>
-<p>Gerlachらは，未回答項目が1項目でもある 回答者は解析から除外していました。実は， そういう回答者は全体の半分以上います。それでも IPIP-NEO-300では完全回答した回答者が15万人近くいるので，十分なサンプル数は得られるのですが，そこには 「完全にもれなく回答できる人」というサンプリングバイアスが 働いているのではないか，と気になります。 例えば，そういう人は誠実性が高い，という可能性はないでしょうか。</p>
-<p>ここでは，IPIP-NEO-300に関して，未回答項目がある回答者についても 同じ因子分析モデルを用いて因子スコアを求め， 完全な回答者との間に違いがないか確認してみます。</p>
+<p>Gerlachらは無回答項目が1項目でもある 回答者は解析から除外していました。実は， そういう回答者は全体の半分以上います。それでも IPIP-NEO-300では完全回答した回答者が15万人近くいるので，十分なサンプル数は得られるのですが，そこには 「完全にもれなく回答できる人」というサンプリングバイアスが 働いているのではないか，と気になります。 例えば，そういう人は誠実性が高い，という可能性はないでしょうか。</p>
+<p>ここでは，IPIP-NEO-300に関して，無回答項目がある回答者についても 同じ因子分析モデルを用いて因子スコアを求め， 完全な回答者との間に違いがないか確認してみます。</p>
 <p>ここでは基本的には<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>の流れ に沿って分析します。</p>
 </div>
 <div class="section level2">
@@ -429,21 +429,21 @@ for (idx in 1:n.data){
 df_data &lt;- as.data.frame(dat.matrix[1:n.used.data,])
 df_data_ic &lt;- as.data.frame(dat.matrix.incomplete[1:n.incomplete,])
 
-cat(&quot;回答ミス無し回答者数:&quot;, n.used.data, 
-    &quot; 回答ミス有り回答者数:&quot;, n.incomplete,&quot;\n&quot;)</code></pre>
-<pre><code>## 回答ミス無し回答者数: 145388  回答ミス有り回答者数: 161925</code></pre>
+cat(&quot;無回答項目無し回答者数:&quot;, n.used.data, 
+    &quot; 無回答項目有り回答者数:&quot;, n.incomplete,&quot;\n&quot;)</code></pre>
+<pre><code>## 無回答項目無し回答者数: 145388  無回答項目有り回答者数: 161925</code></pre>
 </div>
 <div class="section level2">
-<h2>回答ミス数の分布をチェックする</h2>
+<h2>無回答項目数の分布をチェックする</h2>
 <p>無回答項目数の分布を見てみます。</p>
 <pre class="r"><code># 回答ミス数ごとの回答者数分布を棒グラフで見る
 barplot(table(count.missing),
         xlab = &quot;Number of missed items&quot;, ylab = &quot;Frequency&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
-<p>回答ミスが無い回答者が一番多く，そこから回答ミスの数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減少しているようです。</p>
+<p>無回答項目が無い回答者が一番多く，そこから無回答項目の数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減少しているようです。</p>
 <p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，回答ミスをした回答者とは何ら 変わらない，という可能性です。もしそうだとすると， 回答ミスがあった回答者もそうでない回答者も，特性としては なんら変わらない，ということになり，これから 行う解析はあまり見込みのないものになります。</p>
-<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの回答ミス数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
-<p>ポアソン分布でこの回答ミス数をフィットしてみましょう。</p>
+<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの無回答項目数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
+<p>ポアソン分布をこの無回答項目数にフィットしてみましょう。</p>
 <pre class="r"><code># ポアソン分布の最尤推定値はデータの平均値
 lambda_est &lt;- mean(count.missing)
 
