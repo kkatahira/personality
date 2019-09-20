@@ -448,7 +448,7 @@ barplot(table(count.missing),
 lambda_est &lt;- mean(count.missing)
 
 mp &lt;- barplot(table(count.missing)/length(count.missing),
-        xlab = &quot;Number of missed items&quot;, ylab = &quot;pdf&quot;)
+        xlab = &quot;Number of missed items&quot;, ylab = &quot;probability&quot;)
 
 lines(mp, dpois(0:10, lambda_est),type = &quot;o&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
