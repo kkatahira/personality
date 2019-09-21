@@ -398,7 +398,9 @@ dat.matrix.incomplete &lt;- matrix(0, nrow = n.data, ncol = 300)
 n.used.data &lt;- 0
 n.incomplete &lt;- 0
 
-count.missing &lt;- array(n.data)
+# 回答ミスの数を記録する配列
+count.missing &lt;- numeric(n.data)
+
 for (idx in 1:n.data){
   
   # 回答があるのは34列目から333列目　
@@ -441,7 +443,7 @@ barplot(table(count.missing),
         xlab = &quot;Number of missed items&quot;, ylab = &quot;Frequency&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>無回答項目が無い回答者が一番多く，そこから無回答項目の数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減少しているようです。</p>
-<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，その特性は回答ミスをした回答者と何ら 変わらない，という可能性です。もしそうだとすると， 回答ミスがあった回答者がそうでない回答者とパーソナリティという特性において も何か違いがある，ということはあまり期待できません。</p>
+<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，その特性は回答ミスをした回答者と何ら 変わらない，という可能性です。もしそれが事実だとすると， 回答ミスがあった回答者がそうでない回答者とパーソナリティという特性において も何か違いがある，ということはあまり期待できません。</p>
 <p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの無回答項目数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
 <p>ポアソン分布をこの無回答項目数にフィットしてみましょう。 上の無回答項目から最尤推定でフィットしたポアソン分布を実線と〇で示します。</p>
 <pre class="r"><code># ポアソン分布の最尤推定値はデータの平均値
@@ -453,6 +455,7 @@ mp &lt;- barplot(table(count.missing)/length(count.missing),
 lines(mp, dpois(0:10, lambda_est),type = &quot;o&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>明らかにポアソン分布はこのデータには当てはまっていません。 全回答者がそれぞれの項目で独立に同じ確率で回答ミスをしていたと 考えるには，回答ミスがゼロの回答者が多すぎるようです。 やはり，回答ミスを全くしない回答者と多少でもする回答者は 何かが異なるのかもしれません。 回答者は回答ミスをするようなタイプかそうでないタイプにまずわかれ， 回答ミスをするタイプはその中である確率にしたがって回答ミスをする，という プロセスが考えられます。 このようなプロセスを仮定する統計モデルとして，ハードルモデル (hurdle model) が知られています。(参考:<span class="citation">[@nozmaさんの記事]</span>( <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a>)) ここではそのようなモデルまでは検討しませんが， 回答ミスの全くない回答者とそうでない回答者が何か違うかもしれないという 可能性が示唆されたので，パーソナリティにも違いがあるか見ていきましょう。</p>
+<p>(※上の無回答項目数の分布は幾何分布の方が当てはまりはよさそうですが， 幾何分布で仮定されている生成プロセスはこのデータと対応づけられないため， ここでは考えませんでした。)</p>
 </div>
 <div class="section level2">
 <h2>因子負荷，因子スコアの推定</h2>
@@ -520,7 +523,8 @@ g</code></pre>
                upper = list(continuous=&#39;blank&#39;), 
                lower=list(continuous=&#39;density&#39;) )
 print(ggp)</code></pre>
-<p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-10-1.png" width="672" /> こちらも等高線はほぼ完全に一致し，ここでもやはり回答ミスの有無が分布の形状に与える影響はなさそうです。</p>
+<p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>こちらも等高線はほぼ完全に一致し，ここでもやはり回答ミスの有無が分布の形状に与える影響はなさそうです。</p>
 </div>
 
 
