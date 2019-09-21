@@ -399,7 +399,7 @@ n.used.data &lt;- 0
 n.incomplete &lt;- 0
 
 # 回答ミスの数を記録する配列
-count.missing &lt;- numeric(n.data)
+count.miss &lt;- numeric(n.data)
 
 for (idx in 1:n.data){
   
@@ -409,7 +409,7 @@ for (idx in 1:n.data){
   
   tmp.numeric &lt;- as.numeric( unlist(strsplit(tmp,&quot;&quot;)))
   
-  count.missing[idx] &lt;- sum(tmp.numeric == 0)
+  count.miss[idx] &lt;- sum(tmp.numeric == 0)
   
   if (!any(tmp.numeric == 0)) {
      # 一つでも無回答 (0) がある回答者
@@ -439,22 +439,22 @@ cat(&quot;無回答項目無し回答者数:&quot;, n.used.data,
 <h2>無回答項目数の分布をチェックする</h2>
 <p>無回答項目数の分布を見てみます。</p>
 <pre class="r"><code># 回答ミス数ごとの回答者数分布を棒グラフで見る
-barplot(table(count.missing),
+barplot(table(count.miss),
         xlab = &quot;Number of missed items&quot;, ylab = &quot;Frequency&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>無回答項目が無い回答者が一番多く，そこから無回答項目の数が増えるごとに 回答者はほぼ半分ずつ，指数関数的に減少しているようです。</p>
-<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，その特性は回答ミスをした回答者と何ら 変わらない，という可能性です。もしそれが事実だとすると， 回答ミスがあった回答者がそうでない回答者とパーソナリティという特性において も何か違いがある，ということはあまり期待できません。</p>
-<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの無回答項目数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば<a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
+<p>ここで，どの回答者もすべて同じだけの確率で回答ミスを犯す という可能性がないか考えてみます。回答ミスがなかった回答者は たまたまミスをしなかっただけで，その特性は回答ミスをした回答者と何ら 変わらない，という可能性です。もしそれが事実だとすると， 回答ミスがあった回答者がそうでない回答者とパーソナリティにおいて も何か違いがある，ということはあまり期待できません。</p>
+<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/300\)</span> とすると(300は項目数)， 個人ごとの無回答項目数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば <a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
 <p>ポアソン分布をこの無回答項目数にフィットしてみましょう。 上の無回答項目から最尤推定でフィットしたポアソン分布を実線と〇で示します。</p>
 <pre class="r"><code># ポアソン分布の最尤推定値はデータの平均値
-lambda_est &lt;- mean(count.missing)
+lambda_est &lt;- mean(count.miss)
 
-mp &lt;- barplot(table(count.missing)/length(count.missing),
+mp &lt;- barplot(table(count.miss)/length(count.miss),
         xlab = &quot;Number of missed items&quot;, ylab = &quot;probability&quot;)
 
 lines(mp, dpois(0:10, lambda_est),type = &quot;o&quot;)</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>明らかにポアソン分布はこのデータには当てはまっていません。 全回答者がそれぞれの項目で独立に同じ確率で回答ミスをしていたと 考えるには，回答ミスがゼロの回答者が多すぎるようです。 やはり，回答ミスを全くしない回答者と多少でもする回答者は 何かが異なるのかもしれません。 回答者は回答ミスをするようなタイプかそうでないタイプにまずわかれ， 回答ミスをするタイプはその中である確率にしたがって回答ミスをする，という プロセスが考えられます。 このようなプロセスを仮定する統計モデルとして，ハードルモデル (hurdle model) が知られています。(参考:<span class="citation">[@nozmaさんの記事]</span>( <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a>)) ここではそのようなモデルまでは検討しませんが， 回答ミスの全くない回答者とそうでない回答者が何か違うかもしれないという 可能性が示唆されたので，パーソナリティにも違いがあるか見ていきましょう。</p>
+<p>明らかにポアソン分布はこのデータには当てはまっていません。 全回答者がそれぞれの項目で独立に同じ確率で回答ミスをしていたと 考えるには，回答ミスがゼロの回答者が多すぎるようです。 やはり，回答ミスを全くしない回答者と多少でもする回答者は 何かが異なるのかもしれません。 回答者は回答ミスをするようなタイプかそうでないタイプに一定の確率で分かれ， 回答ミスをするタイプはその中である確率にしたがって回答ミスをする，という プロセスが考えられます。 このようなプロセスを仮定する統計モデルとして，ハードルモデル (hurdle model) が知られています。(参考: <span class="citation">[@nozmaさんの記事]</span>(<a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a>)) ここではそのようなモデルまでは検討しませんが， 回答ミスの全くない回答者とそうでない回答者が何か違うかもしれないという 可能性が示唆されたので，パーソナリティにも違いがあるか見ていきましょう。</p>
 <p>(※上の無回答項目数の分布は幾何分布の方が当てはまりはよさそうですが， 幾何分布で仮定されている生成プロセスはこのデータと対応づけられないため， ここでは考えませんでした。)</p>
 </div>
 <div class="section level2">
@@ -499,27 +499,27 @@ df_sc &lt;- df_sc[,c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&qu
 names(df_sc_ic) &lt;- c(&quot;E&quot;,&quot;N&quot;,&quot;C&quot;,&quot;A&quot;,&quot;O&quot;)
 df_sc_ic &lt;- df_sc_ic[,c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&quot;C&quot;)]
 
-df_sc &lt;- df_sc %&gt;% mutate(missing = 0)
-df_sc_ic &lt;- df_sc_ic %&gt;% mutate(missing = 1)
+df_sc &lt;- df_sc %&gt;% mutate(miss = 0)
+df_sc_ic &lt;- df_sc_ic %&gt;% mutate(miss = 1)
 df_sc &lt;- rbind(df_sc, df_sc_ic)
-df_sc$missing &lt;- as.factor(df_sc$missing)</code></pre>
+df_sc$miss &lt;- as.factor(df_sc$miss)</code></pre>
 </div>
 </div>
 <div class="section level2">
 <h2>因子スコアの比較</h2>
 <p>回答ミスの有無で各因子スコアの周辺分布を比較してみます。</p>
 <pre class="r"><code>df_sc_g &lt;- df_sc %&gt;% tidyr::gather(key = domain, 
-                                   value = factor.score, -missing)
+                                   value = factor.score, -miss)
 g &lt;- ggplot(df_sc_g, aes(x=factor.score)) + 
-  geom_density(aes(colour=missing, fill=missing, 
-                   linetype=missing), alpha = 0.3) + 
+  geom_density(aes(colour=miss, fill=miss, 
+                   linetype=miss), alpha = 0.3) + 
   facet_grid(domain~.)
 g</code></pre>
 <p><img src="analyze_IPIP300imcomplete_data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>回答ミスなしの回答者 (ピンク)と 回答ミスありの回答者 (緑)の分布はほぼ完全に重なりました。 周辺分布を見る限りは，回答ミスの有無が パーソナリティの5因子に与える影響はなさそうです。</p>
 <p>分布が重なっているので，回答ミスのない回答者は 平均的に誠実性が高い，といったようなことはなさそうです。</p>
 <p>2次元の周辺分布も見てみましょう。</p>
-<pre class="r"><code>ggp &lt;- ggpairs(df_sc, aes(colour=missing, alpha = 0.5), 
+<pre class="r"><code>ggp &lt;- ggpairs(df_sc, aes(colour=miss, alpha = 0.5), 
                upper = list(continuous=&#39;blank&#39;), 
                lower=list(continuous=&#39;density&#39;) )
 print(ggp)</code></pre>
