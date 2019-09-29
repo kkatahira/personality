@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>実データ (Johnson-120) の解析: 回答ミスがある回答者の分析</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">実データ (Johnson-120) の解析: 回答ミスがある回答者の分析</h1>
+
+</div>
+
+
+<div class="section level2">
+<h2>準備</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(psych)
+library(GPArotation)
+library(tidyverse)
+library(GGally)</code></pre>
+<!-- Gerlachらは無回答項目が1項目でもある -->
+<!-- 回答者は解析から除外していました。実は， -->
+<!-- そういう回答者は全体の半分以上います。それでも -->
+<!-- IPIP-NEO-120では完全回答した回答者が15万人近くいるので，十分なサンプル数は得られるのですが，そこには -->
+<!-- 「120項目もの質問にもれなく回答できる人」というサンプリングバイアスが -->
+<!-- 働いているのではないか，と気になります。 -->
+<!-- 例えば，そういう人は誠実性が高い，という可能性はないでしょうか。 -->
+<p>ここでは，IPIP-NEO-120に関して，無回答項目がある回答者についても 同じ因子分析モデルを用いて因子スコアを求め， 完全な回答者との間で何か違いがないか確認してみます。</p>
+<p>ここでは基本的には<a href="analyze_IPIP300.html">実データ (Johnson-300) の解析1</a>の流れ に沿って分析します。</p>
+</div>
+<div class="section level2">
+<h2>データの読み込み</h2>
+<pre class="r"><code>nmax &lt;- Inf # 読み込む最大行数 最初は小さくして試す
+
+dat.raw &lt;- scan(file = &quot;C:/data/personality/IPIP120.dat&quot;, 
+          nmax = nmax, what = character(), sep = &quot;\n&quot;)
+
+n.data &lt;- length(dat.raw)
+dat.matrix &lt;- matrix(0, nrow = n.data, ncol = 120)
+
+n.used.data &lt;- 0
+
+# 回答ミスの数を記録する配列
+count.miss &lt;- numeric(n.data)
+
+for (idx in 1:n.data){
+  
+  # 回答があるのは32列目から151列目　
+  # そこを抜き出す
+  tmp &lt;- substring(dat.raw[[idx]],32, 31+120)
+  
+  tmp.numeric &lt;- as.numeric( unlist(strsplit(tmp,&quot;&quot;)))
+  
+  count.miss[idx] &lt;- sum(tmp.numeric == 0)
+  
+  n.used.data &lt;- n.used.data + 1
+  dat.matrix[n.used.data,] &lt;- tmp.numeric 
+  
+  # 無回答は0になっているので，NAに
+  tmp.numeric[tmp.numeric == 0] &lt;- NA
+}
+
+# 不要な行は削除
+df_data &lt;- as.data.frame(dat.matrix[1:n.used.data,])
+
+cat(&quot;無回答項目無し回答者数:&quot;, sum(count.miss == 0), 
+    &quot; 無回答項目有り回答者数:&quot;, sum(count.miss &gt; 0), &quot;\n&quot;)</code></pre>
+<pre><code>## 無回答項目無し回答者数: 410376  無回答項目有り回答者数: 208774</code></pre>
+</div>
+<div class="section level2">
+<h2>無回答項目数の分布をチェックする</h2>
+<p>無回答項目数の分布を見てみます。</p>
+<pre class="r"><code>barplot(table(count.miss),
+        xlab = &quot;Number of missed items&quot;, ylab = &quot;Frequency&quot;)</code></pre>
+<p><img src="analyze_IPIP120_response_miss_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>回答ミスをする確率がどの質問項目，どの回答者も 一定であり，これを<span class="math inline">\(\lambda/120\)</span> とすると(120は項目数)， 個人ごとの無回答項目数の分布はパラメータ<span class="math inline">\(\lambda\)</span>の ポアソン分布に近似的に従います (例えば <a href="https://mathtrain.jp/poisson">こちら</a>を参照)。</p>
+<p>ポアソン分布をこの無回答項目数にフィットしてみましょう。 上の無回答項目から最尤推定でフィットしたポアソン分布を実線と〇で示します。</p>
+<pre class="r"><code># ポアソン分布の最尤推定値はデータの平均値
+lambda_est &lt;- mean(count.miss)
+
+mp &lt;- barplot(table(count.miss)/length(count.miss),
+        xlab = &quot;Number of missed items&quot;, ylab = &quot;probability&quot;)
+
+lines(mp, dpois(0:10, lambda_est),type = &quot;o&quot;)</code></pre>
+<p><img src="analyze_IPIP120_response_miss_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>ここでもポアソン分布はこのデータには当てはまっていません。 全回答者がそれぞれの項目で独立に同じ確率で回答ミスをしていたと 考えるには，回答ミスがゼロの回答者が多すぎるようです。</p>
+</div>
+<div class="section level2">
+<h2>因子負荷，因子スコアの推定</h2>
+<p>データの項目 (列) の順番を， “N”の項目 (1, 5, 10,…,116), “E”の項目(2, 6, 11,…,117), “O”の項目(3, 7, 12,…,118), “A”の項目(4, 8, 13,…,119),<br />
+“C”の項目(5, 9, 14,…,120), の順番になるよう列を並び替えます。</p>
+<pre class="r"><code># 並べ替えのためのインデックス
+idxseq &lt;- c(seq(1,116, by=5), # N
+            seq(2,117, by=5), # E
+            seq(3,118, by=5), # O
+            seq(4,119, by=5), # A
+            seq(5,120, by=5)  # C
+)
+
+df_data &lt;- df_data[,idxseq]</code></pre>
+<p>完全データを用いて最尤法とバリマックス回転で因子分析を行い，推定された因子スコアをデータフレームdf_scに格納します。 因子スコアの推定には，これまで使っていた Hermanの方法は欠損値があるとエラーが出るようなので，ここではAnderson and Rubinの方法を用います。</p>
+<pre class="r"><code>res_fa &lt;- fa(df_data, nfactors = 5, 
+             rotate = &quot;varimax&quot;,  
+             scores = &quot;Anderson&quot;, 
+             fm = &quot;ml&quot;, missing = TRUE)
+
+df_sc &lt;- data.frame(res_fa$scores)</code></pre>
+<div class="section level3">
+<h3>因子の解釈</h3>
+<p>因子負荷は以下のようになります。</p>
+<pre class="r"><code>cor.plot(res_fa, numbers = F)</code></pre>
+<p><img src="analyze_IPIP120_response_miss_files/figure-html/data-1.png" width="672" /></p>
+<p>これをもとに推定された因子スコアにラベルを付けます。</p>
+<pre class="r"><code>names(df_sc) &lt;- c(&quot;E&quot;,&quot;C&quot;,&quot;N&quot;,&quot;A&quot;,&quot;O&quot;)
+df_sc &lt;- df_sc[,c(&quot;N&quot;,&quot;E&quot;,&quot;O&quot;,&quot;A&quot;,&quot;C&quot;)]
+
+df_sc &lt;- df_sc %&gt;% mutate(miss = count.miss &gt; 0)
+df_sc$miss &lt;- as.factor(df_sc$miss)</code></pre>
+</div>
+</div>
+<div class="section level2">
+<h2>因子スコアの比較</h2>
+<p>回答ミスの有無で各因子スコアの周辺分布を比較してみます。</p>
+<pre class="r"><code>df_sc_g &lt;- df_sc %&gt;% tidyr::gather(key = domain, 
+                                   value = factor.score, -miss)
+g &lt;- ggplot(df_sc_g, aes(x=factor.score)) + 
+  geom_density(aes(colour=miss, fill=miss, 
+                   linetype=miss), alpha = 0.3) + 
+  facet_grid(domain~.)
+g</code></pre>
+<p><img src="analyze_IPIP120_response_miss_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>2次元の周辺分布も見てみましょう。</p>
+<pre class="r"><code>ggp &lt;- ggpairs(df_sc, aes(colour=miss, alpha = 0.5), 
+               upper = list(continuous=&#39;blank&#39;), 
+               lower=list(continuous=&#39;density&#39;) )
+print(ggp)</code></pre>
+<p><img src="analyze_IPIP120_response_miss_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<!-- こちらも等高線はほぼ完全に一致し，ここでもやはり回答ミスの有無が分布の形状に与える影響はなさそうです。 -->
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

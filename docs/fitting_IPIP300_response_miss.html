@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>回答ミス数のモデリング</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">ホーム</a>
+</li>
+<li>
+  <a href="fa_basics.html">因子分析</a>
+</li>
+<li>
+  <a href="GMM_basics.html">混合正規分布モデル</a>
+</li>
+<li>
+  <a href="kd_basics.html">カーネル密度推定</a>
+</li>
+<li>
+  <a href="fa_GMM_kd.html">Gerlachらの分析法</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">回答ミス数のモデリング</h1>
+
+</div>
+
+
+<p>IPIP-NEO-300データに関して，無回答項目数の分布のモデルを検討し， その背景にあるメカニズムについて考えてみます。</p>
+<p>ここでは，<a href="analyze_IPIP300_response_miss">実データ (Johnson-300) の解析: 回答ミスがある回答者の分析</a> で記録した無回答項目数へモデルを当てはめます。</p>
+<div class="section level2">
+<h2>準備</h2>
+<p>必要なパッケージを読み込みます。</p>
+<pre class="r"><code>library(MASS) # 分布の最尤推定用
+library(pscl) # ハードルモデル，ゼロ切断モデル用</code></pre>
+<div class="section level3">
+<h3>描画のための関数設定</h3>
+<pre class="r"><code># プロット用関数
+plot.dist &lt;- function(density, dist.name = &quot;fitted distribution&quot;){
+  mp &lt;- barplot(table(df_data$count.miss)/length(df_data$count.miss),
+              xlab = &quot;Number of missed items&quot;, 
+              ylab = &quot;probability&quot;,
+              ylim = c(0,0.6))
+  lines(mp, density, type = &quot;o&quot;, lwd = 3, col = &quot;#332288&quot;, lty = 1)
+  legend(&quot;topright&quot;,
+       legend = dist.name,
+       lty = 1, col = &quot;#332288&quot;, 
+       lwd = 3, 
+       bty = &quot;n&quot;)
+}</code></pre>
+</div>
+</div>
+<div class="section level2">
+<h2>データの読み込み</h2>
+<p>無回答項目数を読み込みます。</p>
+<pre class="r"><code>df_data &lt;- read.csv(&quot;./data_count_miss_IPIP300.csv&quot;, header = TRUE)
+
+# 考えるカウント数の系列 (このデータの場合，0:10)
+xcount &lt;- 0:max(df_data)</code></pre>
+</div>
+<div class="section level2">
+<h2>モデルのフィッティング</h2>
+<p>以下，モデルごとに最尤推定でパラメータを推定し， 実際のデータの分布と合わせてプロットします。</p>
+<div class="section level3">
+<h3>ポアソン分布</h3>
+<p>ポアソン分布の確率質量関数は，<span class="math inline">\(x\)</span>を観測されるカウント数とし， <span class="math display">\[
+\text{Poisson}(x|\lambda) = \frac{\lambda^x}{x!} e^{-\lambda}
+\]</span> と表されます。パラメータ<span class="math inline">\(\lambda\)</span>を推定します。</p>
+<pre class="r"><code>mod.poisson &lt;- fitdistr(df_data$count.miss, densfun = &quot;poisson&quot;)
+plot.dist(dpois(xcount, mod.poisson$estimate), &quot;Poisson&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><a href="analyze_IPIP300_response_miss">実データ (Johnson-300) の解析: 回答ミスがある回答者の分析</a> でも見たように，このデータの分布 (グレイのバー)にはポアソン分布 (青い実線) はフィットしません。</p>
+</div>
+<div class="section level3">
+<h3>幾何分布</h3>
+<p>幾何分布の確率質量関数は <span class="math display">\[
+\text{Geometric}(x|p) = p (1-p)^x
+\]</span> と表されます。パラメータ<span class="math inline">\(p\)</span>を推定します。</p>
+<pre class="r"><code>mod.geometric &lt;- fitdistr(df_data$count.miss, densfun=&quot;geometric&quot;)
+d.geometric &lt;- dgeom(xcount, prob = mod.geometric$estimate[1])
+
+plot.dist(d.geometric, &quot;Geometric&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>ポアソン分布に比べるとよくフィットします。 しかし，反応ミス数が0, 1のときはその確率は過小評価，2, 3のときはやや過大評価されているようです。</p>
+</div>
+<div class="section level3">
+<h3>負の二項分布</h3>
+<p>負の二項分布の確率質量関数は <span class="math display">\[
+\text{NegBinom}(x|n, p) = \frac{\Gamma(x+n)}{\Gamma(n) x!} 
+p^n (1-p)^x
+\]</span> と表されます。ここで，<span class="math inline">\(\Gamma(x)\)</span>はガンマ関数を表します。 <span class="math inline">\(\Gamma(x+1) = x!\)</span>です。 負の二項分布のパラメータは「サイズパラメータ」<span class="math inline">\(n\)</span>と「成功確率」<span class="math inline">\(p\)</span>の二つです。 MASSパッケージでは 成功確率<span class="math inline">\(p\)</span>と，<span class="math inline">\(p = \frac{n}{n + \mu}\)</span>という関係があるパラメータ<span class="math inline">\(\mu\)</span>が推定されます。</p>
+<pre class="r"><code>mod.negbin &lt;- fitdistr(df_data$count.miss, 
+                       densfun=&quot;negative binomial&quot;)
+
+n &lt;- mod.negbin$estimate[1]
+mu &lt;- mod.negbin$estimate[2]
+p &lt;- n / (n + mu) # 成功確率
+
+d.nb &lt;- dnbinom(xcount, size = n, prob = p)
+plot.dist(d.nb, &quot;Negative binomial&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>わずかにずれはありますが，幾何分布と比べてもよくフィットしています。</p>
+</div>
+<div id="-" class="section level3">
+<h3>ハードルモデル (ゼロ切断ポアソン分布)</h3>
+<p>ハードルモデルについては <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a> を参照してください。</p>
+<p>簡単にいうと，ハードルモデルでは，1段階目のステップとして 回答者ごとにベルヌーイ分布に基づいて， ゼロを出す (回答ミスをしない) 回答者であるか，1つ 以上の回答ミスを出す回答者であるか決まるとします。 ミスをする回答者のミス数は，ゼロを含まない離散分布から生成 されるとします。2段階目でサンプリングする離散分布として，psclパッケージの デフォルトではゼロ切断ポアソン分布が用いられます。 まずはそのゼロ切断ポアソン分布を用います。</p>
+<pre class="r"><code>mod.hurdle.poiss &lt;- pscl::hurdle(count.miss ~ 1, df_data)
+d.h &lt;- predict(mod.hurdle.poiss, type = &quot;prob&quot;)[1,]
+
+plot.dist(d.h, &quot;Hurdle (Poisson)&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>ハードルモデルの構造上，ゼロの値のカウントは完璧にフィットするのですが， それ以上の値になるとあまりよくフィットしません。 ゼロ切断ポアソン分布はこの分布に適合しないようです。</p>
+<p>psclパッケージによる予測の取り出しは以下のサイトも参考にしました。 <a href="https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/" class="uri">https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/</a></p>
+</div>
+<div id="-" class="section level3">
+<h3>ハードルモデル (負の二項分布)</h3>
+<p>次に2段階目でサンプリングする離散分布として，(ゼロを含まない) 負の二項分布を用います。</p>
+<pre class="r"><code>mod.hurdle.nb &lt;- hurdle(count.miss ~ 1, data = df_data, 
+                        dist = &quot;negbin&quot;)
+d.h &lt;- predict(mod.hurdle.nb, type = &quot;prob&quot;)[1,]
+
+plot.dist(d.h, &quot;Hurdle (Negative binomial)&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>(純粋な)負の二項分布と比べても，このハードルモデルは良くフィットしているようです。</p>
+<p>なお，このハードルモデルは (純粋な) 負の二項分布を含むため (1段階目のステップのベルヌーイ分布を負の二項分布でゼロをとる確率に 一致させれば負の二項分布と等価になる)， 負の二項分布に比べて尤度は同等かそれ以上になります。</p>
+</div>
+<div id="-" class="section level3">
+<h3>ゼロ過剰モデル (ポアソン分布)</h3>
+<p>ゼロ過剰モデルでは， 第1ステップで離散分布から回答ミス数をサンプリングします。 ここでの離散分布はゼロを含んでいても構いません。 第2ステップでは一定の確率で値を0にします。 ゼロ過剰モデルについても <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a> を参照してください。</p>
+<p>離散分布として，まずはポアソン分布を用います。</p>
+<pre class="r"><code>mod.zeroinfl.poiss &lt;- pscl::zeroinfl(count.miss ~ 1, df_data, 
+                                     dist = &quot;poisson&quot;)
+d.zeroinfl &lt;- predict(mod.zeroinfl.poiss, type = &quot;prob&quot;)[1,]
+plot.dist(d.zeroinfl, &quot;Zero inflated (Poisson)&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>ゼロ過剰モデルも構造上，ゼロの値のカウントは完璧にフィットするのですが， それ以上の値になるとあまりよくフィットしません。</p>
+</div>
+<div id="-" class="section level3">
+<h3>ゼロ過剰モデル (負の二項分布)</h3>
+<p>次に離散分布として，負の二項分布を用います。</p>
+<pre class="r"><code>mod.zeroinfl.nb &lt;- pscl::zeroinfl(count.miss ~ 1, df_data, dist = &quot;negbin&quot;)
+d.zeroinfl.nb &lt;- predict(mod.zeroinfl.nb, type = &quot;prob&quot;)[1,]
+plot.dist(d.zeroinfl.nb, &quot;Zero inflated (negative binomial)&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>負の二項分布を用いたハードルモデルに比べるとフィットはよくないようです。</p>
+</div>
+<div id="aic-" class="section level3">
+<h3>AIC によるモデル選択</h3>
+<p>AICを比較してみます。</p>
+<pre class="r"><code>AIC(mod.poisson, # ポアソン分布
+    mod.geometric, # 幾何分布
+    mod.negbin, # 負の二項分布
+    mod.hurdle.poiss, # ハードルモデル (離散分布はポアソン分布)
+    mod.hurdle.nb,  # ハードルモデル (離散分布は負の二項分布)
+    mod.zeroinfl.poiss, # ゼロ過剰モデル (離散分布はポアソン分布)
+    mod.zeroinfl.nb # ゼロ過剰モデル (離散分布は負の二項分布)
+    ) </code></pre>
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">df</th>
+<th align="right">AIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>mod.poisson</td>
+<td align="right">1</td>
+<td align="right">1069408.5</td>
+</tr>
+<tr class="even">
+<td>mod.geometric</td>
+<td align="right">1</td>
+<td align="right">935048.6</td>
+</tr>
+<tr class="odd">
+<td>mod.negbin</td>
+<td align="right">2</td>
+<td align="right">933643.9</td>
+</tr>
+<tr class="even">
+<td>mod.hurdle.poiss</td>
+<td align="right">2</td>
+<td align="right">977969.9</td>
+</tr>
+<tr class="odd">
+<td>mod.hurdle.nb</td>
+<td align="right">3</td>
+<td align="right">933422.6</td>
+</tr>
+<tr class="even">
+<td>mod.zeroinfl.poiss</td>
+<td align="right">2</td>
+<td align="right">977969.9</td>
+</tr>
+<tr class="odd">
+<td>mod.zeroinfl.nb</td>
+<td align="right">3</td>
+<td align="right">933646.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<pre class="r"><code># BICを求めるには，
+# k = log(length(df_data$count.miss))
+# をオプションに入れればよい。</code></pre>
+<p>負の二項分布を離散分布とするハードルモデルがAICが 最低となり，最も予測力のあるモデルと判断されることになります。 次いで，負の二項分布が良いようです。</p>
+</div>
+</div>
+<div class="section level2">
+<h2>反応ミス率の分布の推定</h2>
+<p>負の二項分布は，それぞれの個人の回答ミス数がポアソン分布に従うと仮定し， そのポアソン分布のパラメータ<span class="math inline">\(\lambda\)</span>が個人ごとにガンマ分布 <span class="math display">\[ \text{Gamma}(\lambda|a,b) = \frac{b^a}{\Gamma (a)}
+\lambda^{a - 1} e^{-b \lambda} 
+\]</span> に従って決定されると仮定したときの個人の回答ミス数の分布ととらえられます (証明は付録参照)。また，幾何分布は負の二項分布で<span class="math inline">\(n = 1\)</span>とした場合の特殊形であり，このとき対応するガンマ分布は指数分布となります。</p>
+<p>以下に，これらの関係を図示します。</p>
+<div class="figure">
+<img src="negbinom_geometric.png" alt="分布間の関係図" />
+<p class="caption">分布間の関係図</p>
+</div>
+<p>ここでは上でフィットした負の二項分布や幾何分布のパラメータから，対応する <span class="math inline">\(\lambda\)</span>の分布をプロットしてみます。</p>
+<pre class="r"><code># 色のリスト
+collist &lt;- c(&quot;#CC6677&quot;, &quot;#44AA99&quot;)
+# ラインスタイルのリスト
+ltylist &lt;- c(2,1)
+
+x &lt;- seq(0, 10, by=0.01)
+
+# 幾何分布に対応する指数分布
+b &lt;- mod.geometric$estimate[1] / (1 - mod.geometric$estimate[1])
+plot(x, dexp(x, rate = b), type=&quot;l&quot;, 
+      col = collist[[1]], lwd = 3, 
+     lty = ltylist[1], 
+     xlab = &quot;mean miss rate (per 300 items)&quot;, 
+     ylab = &quot;probability density&quot;,ylim = c(0,2))
+
+# 負の二項分布に対応するガンマ分布
+a &lt;- mod.negbin$estimate[1]
+mu &lt;- mod.negbin$estimate[2] 
+p &lt;- a / (a + mu) # success rate
+
+lines(x, dgamma(x, shape = a, rate = p / (1-p)), 
+      lty = ltylist[2], type = &quot;l&quot;, col = collist[[2]], lwd = 3)
+
+legend(&quot;topright&quot;,
+       legend = c(&quot;Exponential&quot;,&quot;Gamma&quot;),
+       lty = ltylist, col = collist, lwd = 3, 
+       bty = &quot;n&quot;)</code></pre>
+<p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>負の二項分布が幾何分布と比べてフィットがよかったことを 考えると，反応ミス率はゼロに近い回答者が多い 一方，指数関数の減衰が予測するよりはゆっくり減衰する，つまり 反応ミスが結構多い人もいる，という大きな個人差があることが 推察できます。 しかしこれは，あくまで個人の回答ミス数がポアソン分布に従うと いう前提のもとでの話です。この前提は，例えば 全回答者が一定のミス率で項目ごとに独立に反応ミスが起こる，というときに 成り立ちます。 また，後半の項目の方が疲れてミスが増える，という傾向があっても， その傾向が全回答者で全く同一であれば，やはり全体の回答ミス数は ポアソン分布に従います ( ポアソン分布に従う変数を足し合わせた 変数はやはりポアソン分布に従うという，ポアソン分布の加法性による)。</p>
+<p>一方で，もし回答ミスの頻度に個人内で自己相関があれば (例えば一度ミスをするとまたすぐミスしやすいというような)， 一人一人の回答ミス数もポアソン分布には従わなくなります。 興味のある方はシミュレーションなどで検討してみてください。</p>
+</div>
+<div class="section level2">
+<h2>付録</h2>
+<p>ここでは，負の二項分布や幾何分布が，それぞれ ガンマ分布とポアソン分布の混合分布， 指数分布とポアソン分布の混合分布であることを示します。 (<a href="http://www.singularpoint.org/blog/math/stat/poisson-gamma-negative-binomia/">flyioさんのブログ</a> を参考にさせていただきました。) まず，ガンマ分布とポアソン分布の混合分布 (ポアソン分布のパラメータ<span class="math inline">\(\lambda\)</span>がガンマ分布に従うときの分布)を 計算してみます。</p>
+<p><span class="math display">\[
+\begin{aligned}
+&amp; \int_0^\infty \text{Poisson}(x|\lambda) \text{Gamma}(\lambda|a,b) d \lambda \\ 
+&amp;= \int_0^\infty \frac{\lambda^x}{x!} e^{-\lambda} \frac{b^a}{\Gamma (a)}
+\lambda^{a - 1} e^{-b \lambda} d \lambda
+\\
+&amp;= \frac{b^a}{x! \Gamma (a)}
+ \int_0^\infty \lambda^{x + a - 1} e^{-\lambda(1 + b)} d \lambda 
+\\
+&amp; (ここで，\mu = \lambda (1 + b), d \lambda = \frac{d \mu}{1+b} とします。) \\
+&amp;= \frac{b^a}{x! \Gamma (a)}
+ \int_0^\infty \left( \frac{\mu}{1+b} \right)^{x + a - 1} e^{-\mu} \frac{d \mu}{1 + b} 
+\\
+&amp;= \frac{b^a}{x! \Gamma (a) (1+b)^{x+a}}
+ \int_0^\infty \mu^{x + a - 1} e^{-\mu} d \mu \\
+&amp; (ガンマ関数の定義 \Gamma(x) = \int_0^\infty \mu^{x - 1} e^{-\mu} d \mu  
+とその性質 \Gamma(x+1) = x!より) \\
+&amp;= \frac{b^a}{x! \Gamma (a) (1+b)^{x+a}}
+\Gamma (x + a) \\
+&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} b^a  (1+b)^{-x - a} \\
+&amp; (ここで，b = \frac{p}{1-p}とおくと) 
+\\
+&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} 
+\left(\frac{p}{1-p} \right)^a \left(\frac{1}{1-p} \right)^{-x - a} \\
+&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} 
+p^a (1-p)^x 
+\end{aligned}
+\]</span> 最後の式は負の二項分布の定義式 (<span class="math inline">\(n \to a\)</span>としたもの) そのものです。</p>
+<p>なお，この式に<span class="math inline">\(a = 1\)</span>を代入すると， <span class="math display">\[
+\begin{aligned}
+&amp; \frac{\Gamma (x + 1)}{\Gamma(x+1) \Gamma (1)} 
+p (1-p)^x \\
+&amp;= p (1-p)^x 
+\end{aligned}
+\]</span> となり，これは幾何分布そのものです。</p>
+<p>そのとき対応するガンマ分布は， <span class="math display">\[ \text{Gamma}(\lambda|a = 1,b) = \frac{b}{\Gamma (1)}
+\lambda^{0} e^{-b \lambda} = b e^{-b \lambda}
+\]</span> となりますが，これは<span class="math inline">\(b\)</span>をパラメータとする指数分布です。</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
