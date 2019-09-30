@@ -375,18 +375,20 @@ div.tocify {
 
 <p>IPIP-NEO-300データに関して，無回答項目数の分布のモデルを検討し， その背景にあるメカニズムについて考えてみます。</p>
 <p>ここでは，<a href="analyze_IPIP300_response_miss">実データ (Johnson-300) の解析: 回答ミスがある回答者の分析</a> で記録した無回答項目数へモデルを当てはめます。</p>
+<p>なお，ここで扱うのは総計30万7313人分の回答ミス数という大規模なデータになっており，信頼性の高い推定が可能となります。</p>
 <div class="section level2">
 <h2>準備</h2>
 <p>必要なパッケージを読み込みます。</p>
-<pre class="r"><code>library(MASS) # 分布の最尤推定用
+<pre class="r"><code>library(MASS) # 負の二項分布等の最尤推定に用いる
 library(pscl) # ハードルモデル，ゼロ切断モデル用</code></pre>
 <div class="section level3">
 <h3>描画のための関数設定</h3>
+<p>カウントデータのヒストグラムとフィットした分布を 重ねてプロットするための関数を定義しておきます。</p>
 <pre class="r"><code># プロット用関数
 plot.dist &lt;- function(density, dist.name = &quot;fitted distribution&quot;){
   mp &lt;- barplot(table(df_data$count.miss)/length(df_data$count.miss),
               xlab = &quot;Number of missed items&quot;, 
-              ylab = &quot;probability&quot;,
+              ylab = &quot;Probability&quot;,
               ylim = c(0,0.6))
   lines(mp, density, type = &quot;o&quot;, lwd = 3, col = &quot;#332288&quot;, lty = 1)
   legend(&quot;topright&quot;,
@@ -407,7 +409,7 @@ xcount &lt;- 0:max(df_data)</code></pre>
 </div>
 <div class="section level2">
 <h2>モデルのフィッティング</h2>
-<p>以下，モデルごとに最尤推定でパラメータを推定し， 実際のデータの分布と合わせてプロットします。</p>
+<p>以下，モデルごとに最尤推定でパラメータを推定し， 実際のデータと合わせてプロットします。</p>
 <div class="section level3">
 <h3>ポアソン分布</h3>
 <p>ポアソン分布の確率質量関数は，<span class="math inline">\(x\)</span>を観測されるカウント数とし， <span class="math display">\[
@@ -435,7 +437,7 @@ plot.dist(d.geometric, &quot;Geometric&quot;)</code></pre>
 <p>負の二項分布の確率質量関数は <span class="math display">\[
 \text{NegBinom}(x|n, p) = \frac{\Gamma(x+n)}{\Gamma(n) x!} 
 p^n (1-p)^x
-\]</span> と表されます。ここで，<span class="math inline">\(\Gamma(x)\)</span>はガンマ関数を表します。 <span class="math inline">\(\Gamma(x+1) = x!\)</span>です。 負の二項分布のパラメータは「サイズパラメータ」<span class="math inline">\(n\)</span>と「成功確率」<span class="math inline">\(p\)</span>の二つです。 MASSパッケージでは 成功確率<span class="math inline">\(p\)</span>と，<span class="math inline">\(p = \frac{n}{n + \mu}\)</span>という関係があるパラメータ<span class="math inline">\(\mu\)</span>が推定されます。</p>
+\]</span> と表されます。ここで，<span class="math inline">\(\Gamma(x)\)</span>はガンマ関数を表します。 <span class="math inline">\(x\)</span>が整数の場合は<span class="math inline">\(\Gamma(x+1) = x!\)</span>という関係があり， <span class="math inline">\(\Gamma(x+n) = (x+n-1)!\)</span>, <span class="math inline">\(\Gamma(n) = (n-1)!\)</span>として表現されることもあります。 負の二項分布のパラメータは「サイズパラメータ」<span class="math inline">\(n\)</span>と「成功確率」<span class="math inline">\(p\)</span>の二つです。 MASSパッケージでは成功確率<span class="math inline">\(p\)</span>と，<span class="math inline">\(p = \frac{n}{n + \mu}\)</span>という関係があるパラメータ<span class="math inline">\(\mu\)</span>が推定されます。</p>
 <pre class="r"><code>mod.negbin &lt;- fitdistr(df_data$count.miss, 
                        densfun=&quot;negative binomial&quot;)
 
@@ -446,19 +448,19 @@ p &lt;- n / (n + mu) # 成功確率
 d.nb &lt;- dnbinom(xcount, size = n, prob = p)
 plot.dist(d.nb, &quot;Negative binomial&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<p>わずかにずれはありますが，幾何分布と比べてもよくフィットしています。</p>
+<p>わずかにずれはありますが，幾何分布よりもよくフィットしています。</p>
 </div>
 <div id="-" class="section level3">
 <h3>ハードルモデル (ゼロ切断ポアソン分布)</h3>
 <p>ハードルモデルについては <a href="https://qiita.com/nozma/items/52211b1bacaa8a898164" class="uri">https://qiita.com/nozma/items/52211b1bacaa8a898164</a> を参照してください。</p>
-<p>簡単にいうと，ハードルモデルでは，1段階目のステップとして 回答者ごとにベルヌーイ分布に基づいて， ゼロを出す (回答ミスをしない) 回答者であるか，1つ 以上の回答ミスを出す回答者であるか決まるとします。 ミスをする回答者のミス数は，ゼロを含まない離散分布から生成 されるとします。2段階目でサンプリングする離散分布として，psclパッケージの デフォルトではゼロ切断ポアソン分布が用いられます。 まずはそのゼロ切断ポアソン分布を用います。</p>
+<p>簡単にいうと，ハードルモデルでは，1段階目のステップとして 回答者ごとに一定の確率に基づいて， ゼロを出す (回答ミスをしない) 回答者であるか，1つ 以上の回答ミスを出す回答者であるか決まるとします。 回答ミスをする回答者のミス数は，ゼロを含まない離散分布から生成 されます。2段階目でサンプリングする離散分布として，psclパッケージの hurdle関数のデフォルトではゼロ切断ポアソン分布が用いられます。 まずはそのゼロ切断ポアソン分布を用います。</p>
 <pre class="r"><code>mod.hurdle.poiss &lt;- pscl::hurdle(count.miss ~ 1, df_data)
 d.h &lt;- predict(mod.hurdle.poiss, type = &quot;prob&quot;)[1,]
 
 plot.dist(d.h, &quot;Hurdle (Poisson)&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>ハードルモデルの構造上，ゼロの値のカウントは完璧にフィットするのですが， それ以上の値になるとあまりよくフィットしません。 ゼロ切断ポアソン分布はこの分布に適合しないようです。</p>
-<p>psclパッケージによる予測の取り出しは以下のサイトも参考にしました。 <a href="https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/" class="uri">https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/</a></p>
+<p>predict関数による予測の取り出しは以下のサイトを参考にしました。 <a href="https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/" class="uri">https://uvastatlab.github.io/2016/06/01/getting-started-with-hurdle-models/</a></p>
 </div>
 <div id="-" class="section level3">
 <h3>ハードルモデル (負の二項分布)</h3>
@@ -470,7 +472,7 @@ d.h &lt;- predict(mod.hurdle.nb, type = &quot;prob&quot;)[1,]
 plot.dist(d.h, &quot;Hurdle (Negative binomial)&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>(純粋な)負の二項分布と比べても，このハードルモデルは良くフィットしているようです。</p>
-<p>なお，このハードルモデルは (純粋な) 負の二項分布を含むため (1段階目のステップのベルヌーイ分布を負の二項分布でゼロをとる確率に 一致させれば負の二項分布と等価になる)， 負の二項分布に比べて尤度は同等かそれ以上になります。</p>
+<p>なお，このハードルモデルは (純粋な) 負の二項分布を含むため (1段階目のステップでゼロになる確率を負の二項分布でゼロをとる確率に 一致させればその負の二項分布と等価になる)， 尤度は負の二項分布に比べて同等かそれ以上になります。</p>
 </div>
 <div id="-" class="section level3">
 <h3>ゼロ過剰モデル (ポアソン分布)</h3>
@@ -481,7 +483,7 @@ plot.dist(d.h, &quot;Hurdle (Negative binomial)&quot;)</code></pre>
 d.zeroinfl &lt;- predict(mod.zeroinfl.poiss, type = &quot;prob&quot;)[1,]
 plot.dist(d.zeroinfl, &quot;Zero inflated (Poisson)&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
-<p>ゼロ過剰モデルも構造上，ゼロの値のカウントは完璧にフィットするのですが， それ以上の値になるとあまりよくフィットしません。</p>
+<p>ゼロ過剰モデルも構造上，ゼロとなる数は完璧にフィットするのですが， それ以上の値になるとあまりよくフィットしません。</p>
 </div>
 <div id="-" class="section level3">
 <h3>ゼロ過剰モデル (負の二項分布)</h3>
@@ -490,7 +492,7 @@ plot.dist(d.zeroinfl, &quot;Zero inflated (Poisson)&quot;)</code></pre>
 d.zeroinfl.nb &lt;- predict(mod.zeroinfl.nb, type = &quot;prob&quot;)[1,]
 plot.dist(d.zeroinfl.nb, &quot;Zero inflated (negative binomial)&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<p>負の二項分布を用いたハードルモデルに比べるとフィットはよくないようです。</p>
+<p>ポアソン分布を用いた場合と比べるとよくなりますが， 負の二項分布を用いたハードルモデルに比べるとフィットはよくないようです。</p>
 </div>
 <div id="aic-" class="section level3">
 <h3>AIC によるモデル選択</h3>
@@ -551,10 +553,7 @@ plot.dist(d.zeroinfl.nb, &quot;Zero inflated (negative binomial)&quot;)</code></
 </tbody>
 </table>
 </div>
-<pre class="r"><code># BICを求めるには，
-# k = log(length(df_data$count.miss))
-# をオプションに入れればよい。</code></pre>
-<p>負の二項分布を離散分布とするハードルモデルがAICが 最低となり，最も予測力のあるモデルと判断されることになります。 次いで，負の二項分布が良いようです。</p>
+<p>負の二項分布を離散分布とするハードルモデルがAICが 最低となり，最も予測力のあるモデルと判断できます。 次いで，負の二項分布が良いようです。 ただし，ここまでデータ数が多いとパラメータ数による ペナルティはほとんど働かなくなるので解釈には注意が必要です。 なお，BICでも同様の結果になります。 (BICは，上の関数AICにk = log(length(df_data$count.miss)) をオプションに入れれば計算できます。)</p>
 </div>
 </div>
 <div class="section level2">
@@ -596,7 +595,7 @@ legend(&quot;topright&quot;,
        lty = ltylist, col = collist, lwd = 3, 
        bty = &quot;n&quot;)</code></pre>
 <p><img src="fitting_IPIP300_response_miss_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p>負の二項分布が幾何分布と比べてフィットがよかったことを 考えると，反応ミス率はゼロに近い回答者が多い 一方，指数関数の減衰が予測するよりはゆっくり減衰する，つまり 反応ミスが結構多い人もいる，という大きな個人差があることが 推察できます。 しかしこれは，あくまで個人の回答ミス数がポアソン分布に従うと いう前提のもとでの話です。この前提は，例えば 全回答者が一定のミス率で項目ごとに独立に反応ミスが起こる，というときに 成り立ちます。 また，後半の項目の方が疲れてミスが増える，という傾向があっても， その傾向が全回答者で全く同一であれば，やはり全体の回答ミス数は ポアソン分布に従います ( ポアソン分布に従う変数を足し合わせた 変数はやはりポアソン分布に従うという，ポアソン分布の加法性による)。</p>
+<p>負の二項分布が幾何分布と比べてフィットがよかったことを 考えると，反応ミス率はゼロに近い回答者が多い 一方，指数関数が予測するよりはゆっくり減衰する，つまり 反応ミスが結構多い人もいる，という大きな個人差があることが 推察できます。 しかしこれは，あくまで個人の回答ミス数がポアソン分布に従うと いう前提のもとでの話です。この前提は，例えば 全回答者が一定のミス率で項目ごとに独立に反応ミスが起こる，というときに 成り立ちます。 また，後半の項目の方が疲れてミスが増える，という傾向があっても， その傾向が全回答者で全く同一であれば，やはり全体の回答ミス数は ポアソン分布に従います。これは， ポアソン分布に従う変数を足し合わせた 変数は，個々のポアソン分布のパラメータが違っていても やはりポアソン分布に従うという性質があるためです。</p>
 <p>一方で，もし回答ミスの頻度に個人内で自己相関があれば (例えば一度ミスをするとまたすぐミスしやすいというような)， 一人一人の回答ミス数もポアソン分布には従わなくなります。 興味のある方はシミュレーションなどで検討してみてください。</p>
 </div>
 <div class="section level2">
@@ -618,25 +617,25 @@ legend(&quot;topright&quot;,
 &amp;= \frac{b^a}{x! \Gamma (a) (1+b)^{x+a}}
  \int_0^\infty \mu^{x + a - 1} e^{-\mu} d \mu \\
 &amp; (ガンマ関数の定義 \Gamma(x) = \int_0^\infty \mu^{x - 1} e^{-\mu} d \mu  
-とその性質 \Gamma(x+1) = x!より) \\
+より) \\
 &amp;= \frac{b^a}{x! \Gamma (a) (1+b)^{x+a}}
 \Gamma (x + a) \\
-&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} b^a  (1+b)^{-x - a} \\
+&amp;= \frac{\Gamma (x + a)}{\Gamma (a) x!} b^a  (1+b)^{-x - a} \\
 &amp; (ここで，b = \frac{p}{1-p}とおくと) 
 \\
-&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} 
+&amp;= \frac{\Gamma (x + a)}{\Gamma (a) x!} 
 \left(\frac{p}{1-p} \right)^a \left(\frac{1}{1-p} \right)^{-x - a} \\
-&amp;= \frac{\Gamma (x + a)}{\Gamma(x+1) \Gamma (a)} 
+&amp;= \frac{\Gamma (x + a)}{\Gamma (a) x!} 
 p^a (1-p)^x 
 \end{aligned}
 \]</span> 最後の式は負の二項分布の定義式 (<span class="math inline">\(n \to a\)</span>としたもの) そのものです。</p>
 <p>なお，この式に<span class="math inline">\(a = 1\)</span>を代入すると， <span class="math display">\[
 \begin{aligned}
-&amp; \frac{\Gamma (x + 1)}{\Gamma(x+1) \Gamma (1)} 
+&amp; \frac{\Gamma (x + 1)}{\Gamma(x+1) 1!} 
 p (1-p)^x \\
 &amp;= p (1-p)^x 
 \end{aligned}
-\]</span> となり，これは幾何分布そのものです。</p>
+\]</span> となり，これは幾何分布の式になります。</p>
 <p>そのとき対応するガンマ分布は， <span class="math display">\[ \text{Gamma}(\lambda|a = 1,b) = \frac{b}{\Gamma (1)}
 \lambda^{0} e^{-b \lambda} = b e^{-b \lambda}
 \]</span> となりますが，これは<span class="math inline">\(b\)</span>をパラメータとする指数分布です。</p>
